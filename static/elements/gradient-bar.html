@@ -1,0 +1,102 @@
+<dom-module id="gradient-bar">
+  <style>
+    :host{
+      display : inline-block;
+    };
+  </style>
+  <template>
+  </template>
+  <script>
+    Polymer({
+      is : "gradient-bar",
+      properties : {
+        'leftcolor' : {
+          type : String,
+          observer : "_recolour",
+          value : 'white'
+        },
+        'rightcolor' : {
+          type : String,
+          observer : "_recolour",
+          value : 'black'
+        },
+        'degrees' : {
+          type : Number,
+          observer : "_redraw",
+          value : 2
+        },
+        'notify': {
+          type : Boolean,
+          observer : "_changeNotify"
+        }
+      },
+      resize : function(){
+        this._redraw();
+      },
+      attached : function(){
+        this.async(function(){
+          this.svg = d3.select(this)
+                .append("svg:svg")
+                .attr("height", "100%")
+                .attr("width", "100%");
+          this._draw();
+        }, 1);
+
+      },
+      _clear : function(){
+        this.svg.selectAll('rect.bar').remove();
+      },
+      _recolour : function(){
+        if (this.svg){
+          this._compose(this.svg.selectAll('rect.bar').transition());
+        }
+      },
+      _draw : function(){
+        var data = d3.range(0, this.degrees+1);
+        var rects = this.svg.selectAll('rect.bar')
+          .data(data).enter()
+          .append('rect').classed('bar', true)
+        this._compose(rects);
+      },
+      _compose : function(rects){
+        var width = this.clientWidth;
+        var height = this.clientHeight;
+        var rect_x = d3.scale.linear().domain([0, this.degrees+1]).range([0, width]);
+        var rect_y = 0;
+        var rect_width = width/this.degrees;
+        var rect_fill = d3.scale.linear()
+                  .range([this.leftcolor, this.rightcolor])
+                  .domain([0, this.degrees+1])
+                  .interpolate(d3.interpolateHcl);
+
+        rects.attr("x", rect_x)
+          .attr("y", rect_y)
+          .attr("width", rect_width)
+          .attr("height", height)
+          .attr("fill", rect_fill);
+      },
+      _redraw : function(){
+        if (this.svg){
+          this._clear();
+          this._draw();
+        }
+      },
+      _changeNotify : function(){
+        if (this.notify){
+          var fillColor = d3.scale.linear()
+                    .range([this.leftcolor, this.rightcolor])
+                    .domain([0, this.degrees+1])
+                    .interpolate(d3.interpolateHcl);
+          this.svg.selectAll('rect.bar')
+            .on('click', (function(d){
+              this.fire('chosen', {'color': fillColor(d)});
+            }).bind(this));
+        }else{
+          this.svg.selectAll('rect.bar')
+            .on('click', null);
+        }
+      }
+
+    })
+  </script>
+</dom-module>

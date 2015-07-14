@@ -1,0 +1,159 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+
+<dom-module id="color-picker">
+  <style>
+    :host{
+      display: inline-block;
+      position: relative;
+      overflow: visible;
+      z-index: 100;
+    };
+    rect.colour{
+      @apply(--shadow-elevation-2dp);
+    };
+  </style>
+  <template>
+  </template>
+  <script>
+  Polymer({
+    is : "color-picker",
+    properties : {
+      "size" : {
+        type : Number,
+        observer : "_redraw",
+        value : 30
+      },
+      "columns" : {
+        type : Number,
+        observer : "_redraw",
+        value : 5
+      },
+      "colors" : {
+        type : String,
+        observer : "_redraw",
+        value : ""
+      },
+      "_colors" : {
+        type : Array,
+        "computed" : "_getColours(colors)"
+      },
+      "chosen" : {
+        type : String,
+        value : "",
+        notify : true,
+        reflectToAttribute: true
+      }
+    },
+    attached : function(){
+      this.async(function(){
+          
+          this._palette = d3.select(this).append("svg:svg")
+                  .style("position", "absolute");
+
+          this.chosen = this._colors[0];
+
+          var colourRect = this._palette.selectAll("rect.colour")
+            .data(this._colors).enter()
+            .append("rect").classed("colour", true);
+
+          this._drawShrink(true);
+          this.style.height = this.size+"px";
+          this.style.width = this.size+"px";
+      });
+    },
+    _getColours : function(colours){
+      return colours.split(",").map(function(colour){return colour.trim()});
+    },
+    _expandPos : function(colourRect){
+      var size = this.size;
+      var columns = this.columns;
+      this._expanded = false;
+      return colourRect
+          .attr('x', function(d, i){return (i%columns)*size;})
+          .attr('y', function(d, i){return Math.floor(i/columns)*size;})
+          .attr('height', size).attr('width', size)
+          .attr('fill', function(d, i){return d;});
+    },
+    _shrinkPos : function(colourRect){
+      var size = this.size;
+      var d = this.chosen;
+      return colourRect
+            .attr('x', 0)
+          .attr('y', 0)
+          .attr('height', size)
+          .attr('width', size)
+          .attr('fill', d);
+    },
+    _drawExpand : function(animated){
+      this._expanded = true;
+      var colourRect = this._palette.selectAll('rect.colour');
+      colourRect.on('mouseover', (this._chosenEffect).bind(this));
+      colourRect.on('click', null);
+      if (animated){
+        this._expandPos(colourRect.transition().duration(500));
+      }else{
+        this._expandPos(colourRect);
+      }
+    },
+    _drawShrink : function(animated){
+      this._expanded = false;
+      var colourRect = this._palette.selectAll('rect.colour');
+      if (animated){
+        this._shrinkPos(colourRect.transition().duration(500));
+      }else{
+        this._shrinkPos(colourRect);
+      }
+      colourRect.on('mouseover', null);
+      colourRect.on('click', (function(){this._drawExpand(true)}).bind(this));
+    },
+    _redraw : function(){
+      if (this._palette){
+        this.style.height = this.size+"px";
+        this.style.width = this.size+"px";
+        if (this._expanded){
+          this._drawExpand(false);
+        }else{
+          this._drawShrink(false);
+        }
+      }
+    },
+    _beforeMagnify : function(chosenRect, d, i){
+      var size = this.size;
+      var columns = this.columns;
+      return chosenRect
+        .attr('x', (i%columns)*size)
+        .attr('y', Math.floor(i/columns)*size)
+        .attr('height', size).attr('width', size)
+        .attr('fill', d);
+    },
+    _afterMagnify : function(chosenRect, d, i, scale){
+      scale = scale || 0.2;
+      var size = this.size;
+      var columns = this.columns;
+      return chosenRect 
+          .attr('x', (i%columns-scale/2)*size)
+          .attr('y', (Math.floor(i/columns)-scale/2)*size)
+          .attr('height', size*(1+scale))
+          .attr('width', size*(1+scale));
+    },
+    _chosenEffect : function(d, i){
+
+      this._palette.selectAll('rect.chosen').remove();
+
+      var chosenRect = this._palette.append('rect').classed('chosen', true);
+      this._beforeMagnify(chosenRect, d, i);
+      this._afterMagnify(chosenRect.transition(), d, i);
+
+      chosenRect.on('mouseout', (function(){
+        this._beforeMagnify(chosenRect.transition(), d, i).remove();
+      }).bind(this));
+      chosenRect.on('click', (function(){
+        this._beforeMagnify(chosenRect.transition(), d, i).remove();
+        this.chosen = d;
+        this._drawShrink(true);
+        this.fire('choose-color', {'color' : d});
+      }).bind(this));
+    }
+  })
+  </script>
+</dom-module>

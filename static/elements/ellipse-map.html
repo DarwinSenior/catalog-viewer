@@ -21,8 +21,7 @@
 
     properties: {
       url : {
-        type : String,
-        reflectToAttribute : true
+        type : String
       },
       maxZoom : {
         type : Number,
@@ -33,13 +32,31 @@
         value : {},
         notify : true,
         observer : "_reloadMap"
+      },
+      requiredinfo : {
+        type : Object,
+        value : {},
+        notify : true
+      },
+      colorscheme : {
+        type : Object,
+        notify : true,
+        observer : 'changeColor'
       }
     },
     ready : function(){
       this.drawer = new Drawer();
+      this.drawer.changeEvent((function(d, i){
+        var data = [];
+        for (var i=0; i < (this.data.HEADER || []).length; i++){
+          var key = this.data.HEADER[i];
+          data.push({name : key, value : d[key].toString()});
+        }
+        this.requiredinfo = data;
+      }).bind(this));
     },
     attached : function(){
-      this.map = L.map(this.$.map).setView([0,0], 3);
+      this.map = L.map(this.$.map).setView([-1.076704067725527,143.09487462043765], 16);
       this._addLayer();
     },
     _addLayer : function(){
@@ -58,8 +75,9 @@
       if (this.vector_layer){
         this.map.removeLayer(this.vector_layer);
         this.vector_layer = undefined;
+        this._setDefaultPosition();
       }
-      this._addLayer();
+        this._addLayer();
     },
     /*
     The color scheme of type Data -> Color
@@ -68,8 +86,17 @@
     where Color is a string which conforms to CSS spec for color 
     Example : "white" || "#00000" || "rgb(0,0,0)"
     */
-    changeColor : function(colorAlg){
-      this.drawer.changeColor(colorAlg);
+    changeColor : function(scheme){
+      console.log('changed');
+      if (scheme && scheme.selected && this.data){
+        var min = this.data[scheme.selected].min;
+        var max = this.data[scheme.selected].max;
+        colorAlg = function(d){
+          var scale = (d[scheme.selected]-min)/(max-min);
+          return d3.interpolateHsl(scheme.mincolor || 'white', scheme.maxcolor || 'white')(scale);
+        }
+        this.drawer.changeColor(colorAlg);
+      }
     },
     /*
     The position returns {zoom: <int>, center: <LatLng>} 
@@ -83,14 +110,33 @@
       }
       return this.map.getView();
     },
-    setDefaultPosition : function(){
-
+    /*
+    Set to the center of the coverage of the map,
+    and find the appropriate zoom level
+    */
+    _setDefaultPosition : function(){
+      var midpoint = this._RADEC2Scale([
+        (this.data.RA.max+this.data.RA.min)/2,
+        (this.data.DEC.max+this.data.DEC.min)/2]);
+      var pos = this.map.layerPointToLatLng(midpoint);
+      this.map.setView(pos);
     },
     resize : function(){
       this.map.invalidateSize(true);
     },
     _parseData : function(){
       var data = this.data;
+    },
+    /*
+    The input shall be a pair of ra and dec,
+    thus, output the ratio of where the point is located
+    */
+    _RADEC2Scale : function(point){
+      // lng = item['RA'] - 180
+      // lat = item['DEC']
+      var lng = point[0]-180,
+          lat = point[1]
+      return [(lng + 180)/360, (lat + 90)/180]
     }
   });
 })();

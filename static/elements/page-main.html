@@ -1,4 +1,5 @@
 <link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="../bower_components/neon-page-behavior/neon-page-behavior.html">
 <link rel="import" href="./item-button-group.html">
 <link rel="import" href="./item-card.html">
 
@@ -26,7 +27,7 @@
 (function() {
     Polymer({
         is: 'page-main',
-        behaviors : [Polymer.NeonSharedElementAnimatableBehavior],
+        behaviors : [Polymer.NeonSharedElementAnimatableBehavior, Polymer.NeonPageBehavior],
         listeners : {
             'openCard': '_handleOpenCard', 
             'newCard' : '_handleNewCard',
@@ -50,18 +51,18 @@
                 notify : true
             }
         },
-        attached : function(){
+        ready : function(){
             // This time we could specify the animation process
             var cards = Polymer.dom(this.root).querySelectorAll('item-card');
             this.animationConfig.entry =[
                 {name: "hero-animation", id: "page-transition", toPage: this},
-                // {name: "cascaded-animation", animation: "fade-in-animation", nodes: cards},
+                {name: "cascaded-animation", animation: "fade-in-animation", nodes: cards},
                 {name: "slide-down-animation", node: this.$.header},
                 {name: "fade-in-animation", node: this.$.buttons}
             ];
             this.animationConfig.exit = [
                 {name: "hero-animation", id: "page-transition", fromPage : this},
-                // {name: 'cascaded-animation', animation : "fade-out-animation", nodes: cards},
+                {name: 'cascaded-animation', animation : "fade-out-animation", nodes: cards},
                 {name: "slide-up-animation", node: this.$.header},
                 {name: 'fade-out-animation', node: this.$.buttons}
             ];
@@ -79,7 +80,6 @@
             this.sharedElements['page-transition'] = target;
         },
         _handleOpenCard : function(event, data){
-            console.log("fired!");
             this._changePage(data.target);
             this.fire('changePage', {url : 'map-page', id : data.pageurl});
         },
@@ -87,11 +87,15 @@
             this.status = 'enter';
             var cards = this.querySelectorAll('item-card');
             for (var i=0; i < cards.length; i++){
-                cards.init();
+                cards[i].enter();
             }
         },
         exit : function(){
-
+            this.status = 'exit';
+            var cards = this.querySelectorAll('item-card');
+            for (var i=0; i < cards.length; i++){
+                cards[i].exit();
+            }
         }
     });
 })();

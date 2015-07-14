@@ -34,6 +34,7 @@
   </style>
   <template>
     <paper-material elevation="[[_elevation]]" on-mouseover="_mouseover" on-mouseout="_mouseout">
+      <template is="dom-if" if="{{_isEntered(status)}}">
       <div class="layout vertical wrapper">
         <div class="title" id="title">[[title]]</div>
         <div class="content flex" id="description">
@@ -44,6 +45,7 @@
           <iron-icon icon="create"></iron-icon>
         </div>
       </div>
+      </template>
     </paper-material>
   </template>
 </dom-module>
@@ -79,13 +81,14 @@
         value : {entry: undefined, exit: undefined}
       },
       status : {
-        type : String
+        type : String,
+        value : 'enter'
       }
     },
     attached : function(){
       var nodes = [this.$.title, this.$.description, this.$.buttons]
-      this.animationConfig.entry = {name : 'cascaded-animation', animation : 'slide-from-left', nodes : nodes};
-      this.animationConfig.exit = {name : 'cascaded-animation', animation : 'slide-left', nodes : nodes};
+      this.animationConfig.entry = {name : 'cascaded-animation', animation : 'fade-in-animation', nodes : nodes};
+      this.animationConfig.exit = {name : 'cascaded-animation', animation : 'fade-out-animation', nodes : nodes};
     },
     _onclick : function(){
       this.fire("openCard", {target : this, pageurl : this['for']});
@@ -97,17 +100,14 @@
       this._elevation = 2;
     },
     _onNeonAnimationFinish : function(){
-      if (this.status == 'exit'){
-        this.style.display = 'none';
-      }
     },
     exit : function(){
       this.status = 'exit';
-      this.playAnimation('exit');
+      // this.playAnimation('exit');
     },
     enter : function(){
-      this.playAnimation('entry');
       this.status = 'enter';
+      // this.playAnimation('entry');
     },
     _delete : function(evt){
       qwest.delete('/maps', {id : this['for']})
@@ -115,6 +115,9 @@
             this.fire('update', data);
           }).bind(this));
       evt.stopPropagation();
+    },
+    _isEntered : function(status){
+      return (status == "enter");
     }
   });
 })();

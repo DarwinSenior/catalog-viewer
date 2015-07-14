@@ -1,5 +1,6 @@
-var Drawer = function(colorAlg, tileSize){
+var Drawer = function(colorAlg, eventAlg, tileSize){
 	this._colorAlg = colorAlg || function(){return "white"};
+	this._eventAlg = eventAlg || function(){}; 
 	this._tiles = [];
 	tileSize = tileSize || [256, 256]; // width, height
 	this._tileWidth = tileSize[0];
@@ -41,14 +42,22 @@ Drawer.prototype.drawer = function(data, tile){
 						.attr('ry', function(d){return d.ry})
 						.attr('transform', function(d){return d.transform})
 						.attr('fill', this._colorAlg);
+	ellipses.on('click', this._eventAlg);
 };
 
 Drawer.prototype.cleaner = function(tile){
 	this._tiles = this._tiles.filter(function(item){return item!=tile}); // cut off the tile
+	d3.select(tile).selectAll('ellipse').on('click', null);
+};
 
-	// d3.select(tile).selectAll('ellipse')
-	// 	.on(".event", null); // remove all the event created by us
-
+Drawer.prototype.changeEvent = function(eventAlg){
+	this._eventAlg = eventAlg || this._eventAlg;
+	for (var i=0; i<this._tiles.length; i++){
+		var tile = this._tiles[i];
+		d3.select(tile)
+			.selectAll('ellipse')
+			.on('click', this._eventAlg);
+	}
 };
 
 Drawer.prototype.changeColor = function(colorAlg){

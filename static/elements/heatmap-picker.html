@@ -1,0 +1,60 @@
+<link rel="import" href="./gradient-bar.html">
+<link rel="import" href="./color-picker.html">
+
+
+<dom-module id="heatmap-picker">
+  <style>
+    :host {
+      @apply(--layout);
+      @apply(--layout-horizontal)
+      margin: 5px;
+    }
+
+  </style>
+  <template>
+    <color-picker id="leftpicker" size="[[30]]" chosen='{{leftcolor}}'></color-picker>
+    <gradient-bar id="bar" class="flex"
+      leftcolor='[[leftcolor]]' 
+      rightcolor='[[rightcolor]]'
+      degrees='10'></gradient-bar>
+    <color-picker id="rightpicker" size="[[size]]" chosen='{{rightcolor}}'/></color-picker>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'heatmap-picker',
+    properties: {
+      leftcolor : {
+        type: String,
+        notify : true
+      },
+      rightcolor : {
+        type: String,
+        notify : true
+      },
+      size : {
+        type : Number,
+        value : 30
+      }
+    },
+    attached : function(){
+      this.async(function(){
+      var colors = ["#F44336", "#E91E63", "#9C27B0", "#673AB7", "#3F51B5", 
+              "#2196F3", "#03A9F4", "#00BCD4", "#009688", "#4CAF50", 
+              "#8BC34A", "#CDDC39", "#FFEB3B", "#FFC107", "#FF9800",
+              "#FF5722", "#795548", "#9E9E9E", "#607D8B", "#000000"];
+      d3.select(this).selectAll("color-picker")
+        .attr("colors", colors);
+      this.$.bar.style.height = this.size+"px";
+      this.$.bar.resize();
+      });
+    },
+    heatmapper : function(){
+      return d3.scale.linear()
+                .range([this.leftcolor, this.rightcolor])
+                .interpolate(d3.interpolateHsl);
+    }
+  });
+})();
+</script>
