@@ -1,0 +1,96 @@
+<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="./map-controller.html">
+<link rel="import" href="./ellipse-map.html">
+<dom-module id="page-map">
+  <style>
+    :host {
+      display: block;
+      height : 100vh;
+      width: 100vw;
+    }
+    #mapcontent {
+      display: block;
+      height : 100vh;
+      float: left;
+      width: 70vw;
+      background-color: var(--paper-grey-800);
+    }
+    #sidebar {
+      display: block;
+      height: 100vh;
+      overflow: scroll;
+      float: left;
+      width: 30vw;
+      background-color: var(--paper-grey-50);
+      overflow: visible;
+    }
+  </style>
+  <template>
+    <div id="sidebar">
+      <map-controller title="[[_getTitle(data)]]" data="[[data]]" colorScheme="[[colorScheme]]" displayData="[[displayData]]"></map-controller>
+    </div>
+    <div id="mapcontent">
+      <ellipse-map id="themap" data="[[data]]" colorScheme="[[colorScheme]]" displayData="{{displayData}}"></ellipse-map>
+    </div>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'page-map',
+    behaviors : [Polymer.NeonSharedElementAnimatableBehavior, Polymer.NeonAnimationRunnerBehavior],
+    listeners : {
+      "page-map-return" : "_handleReturn",
+      'neon-animation-finish': '_onNeonAnimationFinish'
+    },
+    properties: {
+      animationConfig : {
+        value : {entry: undefined, exit: undefined}
+      },
+      sharedElements : {
+        value : {}
+      },
+      data : {
+        type : Object,
+        value : {}
+      },
+      colorScheme : {
+        type : Object,
+        notify : true
+      },
+      displayData : {
+        type : Object,
+        notify : true
+      }
+    },
+    attached : function(){
+      this.animationConfig.entry = [
+        {name: 'fade-in-animation', node: this.$.sidebar},
+        {name: 'hero-animation', toPage: this, id: 'page-transition'}
+      ];
+      this.animationConfig.exit = [
+        {name: 'fade-out-animation', node: this.$.sidebar},
+        {name: 'hero-animation', fromPage: this, id: 'page-transition'}
+      ];
+      this.sharedElements = {'page-transition' : this.$.mapcontent}
+    },
+    _handleReturn : function(evt){
+      this.fire('changePage', {url : 'main-page'});
+    },
+    enter: function() {
+      this.$.themap.resize();
+      console.log('entered!');
+    },
+    _getTitle : function(data){
+      return (data.NAME || "untitled");
+    },
+    exit : function(){
+
+    },
+    _onNeonAnimationFinish : function(){
+      console.log("finished");
+    }
+  });
+})();
+</script>

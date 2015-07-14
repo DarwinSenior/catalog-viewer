@@ -1,0 +1,97 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<script src="../scripts/Drawer.js"></script>
+<script src="../scripts/L.SVGLayer.js"></script>
+<dom-module id="ellipse-map">
+  <style>
+    :host {
+      display: block;
+      position: relative;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  <template>
+    <div id="map" style="width: 100%; height: 100%; background-color: black;"></div>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'ellipse-map',
+
+    properties: {
+      url : {
+        type : String,
+        reflectToAttribute : true
+      },
+      maxZoom : {
+        type : Number,
+        value : 18
+      },
+      data : {
+        type : Object,
+        value : {},
+        notify : true,
+        observer : "_reloadMap"
+      }
+    },
+    ready : function(){
+      this.drawer = new Drawer();
+    },
+    attached : function(){
+      this.map = L.map(this.$.map).setView([0,0], 3);
+      this._addLayer();
+    },
+    _addLayer : function(){
+      if (this.data._id){
+        var url = "http://localhost:5000/tile/"+this.data._id+"/{z}/{x}/{y}.json";
+        this.vector_layer = new L.SVGLayer(url, {
+          maxZoom : this.maxZoom,
+          attribution : "YDC"
+        }, 
+        this.drawer.drawer.bind(this.drawer), 
+        this.drawer.cleaner.bind(this.drawer));
+        this.map.addLayer(this.vector_layer);
+      }
+    },
+    _reloadMap : function(){
+      if (this.vector_layer){
+        this.map.removeLayer(this.vector_layer);
+        this.vector_layer = undefined;
+      }
+      this._addLayer();
+    },
+    /*
+    The color scheme of type Data -> Color
+    where Data is a dictionary specified by json file returned
+    Example {RA : <Number>, DEC : <Number>, THETA : <Number> ...}
+    where Color is a string which conforms to CSS spec for color 
+    Example : "white" || "#00000" || "rgb(0,0,0)"
+    */
+    changeColor : function(colorAlg){
+      this.drawer.changeColor(colorAlg);
+    },
+    /*
+    The position returns {zoom: <int>, center: <LatLng>} 
+    if newValue is defined, the map will set new position 
+    and return the newest position, and newValue shall
+    be in the form {zoom: <int>, center: <LatLng>}
+    */
+    position : function(newValue){
+      if (newValue){
+        this.map.setView(newValue);
+      }
+      return this.map.getView();
+    },
+    setDefaultPosition : function(){
+
+    },
+    resize : function(){
+      this.map.invalidateSize(true);
+    },
+    _parseData : function(){
+      var data = this.data;
+    }
+  });
+})();
+</script>

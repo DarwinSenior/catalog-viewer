@@ -1,0 +1,98 @@
+<link rel="import" href="../bower_components/neon-animation/neon-animation.html">
+<link rel="import" href="./item-button-group.html">
+<link rel="import" href="./item-card.html">
+
+<dom-module id="page-main">
+    <style>
+        :host {
+            display: block;
+            background-color: var(--paper-grey-200);
+            height : 100vh;
+            width: 100vw;
+        }
+    </style>
+    <template>
+        <paper-toolbar id="header">
+            <paper-icon-button icon="menu" on-tap="menuAction"></paper-icon-button>
+            <div class="title">DES MAP</div>
+        </paper-toolbar>
+        <item-button-group id="buttons"></item-button-group>
+        <template is="dom-repeat" items="[[data]]">
+            <item-card for="[[item._id]]" title="[[item.NAME]]" description="[[item.DESCRIPTION]]"></item-card>
+        </template>
+    </template>
+</dom-module>
+<script>
+(function() {
+    Polymer({
+        is: 'page-main',
+        behaviors : [Polymer.NeonSharedElementAnimatableBehavior],
+        listeners : {
+            'openCard': '_handleOpenCard', 
+            'newCard' : '_handleNewCard',
+            'entry-animation-finish' : 'enter',
+            'exit-animation-start' : 'exit'
+        },
+        properties: {
+            animationConfig: {
+                type : Object,
+                value : {'entry' : undefined, 'exit': undefined}
+            },
+            sharedElements : {
+                value : {'page-transition' : this}
+            },
+            status : {
+                type : String // enter/exit
+            },
+            data : {
+                type : Array,
+                value : [],
+                notify : true
+            }
+        },
+        attached : function(){
+            // This time we could specify the animation process
+            var cards = Polymer.dom(this.root).querySelectorAll('item-card');
+            this.animationConfig.entry =[
+                {name: "hero-animation", id: "page-transition", toPage: this},
+                // {name: "cascaded-animation", animation: "fade-in-animation", nodes: cards},
+                {name: "slide-down-animation", node: this.$.header},
+                {name: "fade-in-animation", node: this.$.buttons}
+            ];
+            this.animationConfig.exit = [
+                {name: "hero-animation", id: "page-transition", fromPage : this},
+                // {name: 'cascaded-animation', animation : "fade-out-animation", nodes: cards},
+                {name: "slide-up-animation", node: this.$.header},
+                {name: 'fade-out-animation', node: this.$.buttons}
+            ];
+        },
+        _changePage : function(target){
+            var cards = this.querySelectorAll('item-card');
+            if (target){
+                cards = Array.prototype.filter.call(cards,
+                    function(item){ return item!=target});
+            }else{
+                cards = Array.prototype.slice.call(cards);
+            }
+            this.animationConfig['entry'][1].nodes = cards;
+            this.animationConfig['exit'][0].nodes = cards;
+            this.sharedElements['page-transition'] = target;
+        },
+        _handleOpenCard : function(event, data){
+            console.log("fired!");
+            this._changePage(data.target);
+            this.fire('changePage', {url : 'map-page', id : data.pageurl});
+        },
+        enter : function(){
+            this.status = 'enter';
+            var cards = this.querySelectorAll('item-card');
+            for (var i=0; i < cards.length; i++){
+                cards.init();
+            }
+        },
+        exit : function(){
+
+        }
+    });
+})();
+</script>

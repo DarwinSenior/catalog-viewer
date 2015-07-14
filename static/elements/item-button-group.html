@@ -1,0 +1,96 @@
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-styles/color.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/iron-autogrow-textarea/iron-autogrow-textarea.html">
+<link rel="import" href="../bower_components/iron-input/iron-input.html">
+<link rel="import" href="./paper-file-input.html">
+<dom-module id="item-button-group">
+  <style>
+    :host {
+      display: block;
+      position: absolute;
+      bottom: 0px;
+      left: 0px;
+      right: 0px;
+      top: 0px;
+    }
+    paper-fab{
+      position: absolute;
+    }
+    paper-fab[icon="add"]{
+      background-color: var(--paper-red-600);
+      bottom: 20px;
+      right: 10px;
+    }
+    paper-fab[icon="create"]{
+      background-color: var(--paper-light-green-500);
+      bottom: 80px;
+      right: 19px;
+    }
+    paper-dialog#modal_add{
+      height: 60%;
+    }
+    #header{
+      margin: 0 20px;
+      padding: 10px;
+      border-bottom: black solid 2px;
+    }
+    #content{
+      margin: 10px 25%;
+    }
+    .wrapper{
+      height: 100%;
+    }
+  </style>
+  <template>
+    <paper-fab icon="create" mini ></paper-fab>
+    <paper-fab icon="add" on-click="_open_add"></paper-fab>
+    <paper-dialog id="modal_add" modal
+      entry-animation="slide-from-right-animation"
+      exit-animation="slide-left-animation">
+      <div class="layout vertical wrapper">
+        <div id="header">
+          <h1>CREATE A NEW MAP</h1>
+        </div>
+        <div id="content" class="flex layout vertical">
+          <paper-input-container>
+            <label>Name</label>
+            <input is="iron-input" id="input_name">
+          </paper-input-container>
+          <paper-input-container>
+            <label>DESCRIPTION</label>
+            <input is="iron-input" id="input_description">
+          </paper-input-container>
+          <paper-file-input id="input_file"></paper-file-input>
+        </div>
+        <div class="layout horizontal-reverse">
+          <paper-button dialog-confirm autofocus on-click="submit">CREATE</paper-button>
+          <paper-button dialog-dismiss>CANCEL</paper-button>
+        </div>
+      </div>
+    </paper-dialog>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'item-button-group',
+    properties: {
+    },
+    _open_add: function(){
+      this.$.modal_add.open();
+    },
+    submit : function(event){
+      var formdata = new FormData();
+      formdata.append('csv', this.$.input_file.file);
+      formdata.append('name', this.$.input_name.value);
+      formdata.append('description', this.$.input_description.value);
+      qwest.put('/maps', formdata).then((function(data){
+        console.log(data);
+        this.fire('update', data);
+      }).bind(this));         
+    }
+  });
+})();
+</script>

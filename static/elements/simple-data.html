@@ -1,0 +1,45 @@
+<dom-module id="simple-data">
+  <style>
+    :host {
+      display: block;
+      font-size: 20px;
+    }
+    table {
+      width: 100%
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--paper-grey-200); 
+    }
+  </style>
+  <template>
+    <table>
+      <tbody>
+        <template is="dom-repeat" items="[[data]]">
+          <tr>
+            <th>[[item.name]]</th>
+            <td>[[item.value]]</td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'simple-data',
+
+    properties: {
+      data :{
+        type : Array,
+        value : [
+          {name: "First", value : "10"},
+          {name: "Second", value : "20"},
+          {name: "Third", value : "30"}]
+      }
+    }
+  });
+})();
+</script>

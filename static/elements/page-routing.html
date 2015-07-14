@@ -1,0 +1,66 @@
+
+<link rel="import" href="./page-main.html">
+<link rel="import" href="./page-map.html">
+<dom-module id="page-routing">
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+  <template>
+    <neon-animated-pages id="content" attr-for-selected="name" selected$="[[url]]">
+      <page-main name="main-page" id="main" data="[[items]]"></page-main>
+      <page-map name="map-page" data="[[item]]" id="map"></page-map>
+    </neon-animated-pages>
+  </template>
+</dom-module>
+<script>
+(function() {
+  function findBykey(arr, key, val){
+    for (var i=0; i < arr.length; i++){
+      if (arr[i][key] == val) return arr[i];
+    }
+  }
+  Polymer({
+    is: 'page-routing',
+    listeners : {
+      'changePage': '_handlePageChange',
+      'update': '_handleUpdate'
+    },
+    properties: {
+      "url" : {
+        type : String,
+        value : "main-page"
+      },
+      "items" : {
+        type : Array,
+        value : []
+      },
+      "item" : {
+        type : Object,
+        value : {}
+      }
+    },
+    _handlePageChange : function(event, data){
+      /*
+        Fire when the url changes
+      */
+      if (data.url == 'main-page' && this.url != "main-page"){
+        this.url = data.url;
+      }
+      if (data.url == "map-page" && this.url != "map-page"){
+        this.url = data.url;
+        this.item = findBykey(this.items, '_id', data.id) || {};
+      }
+    },
+    attached : function(event){
+      qwest.get('/maps', null).then((function(data){
+        this.items = data;
+      }).bind(this));
+    },
+    _handleUpdate : function(event, items){
+      this.items = items;
+    }
+  });
+})();
+</script>

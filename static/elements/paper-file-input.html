@@ -1,0 +1,49 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<dom-module id="paper-file-input">
+  <style>
+    :host {
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+    .upload{
+      position: absolute;
+      opacity: 0;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    paper-button{
+      position: relative;
+    }
+  </style>
+  <template>
+    <paper-button noink>
+      <span>[[file_name]]</span>
+      <input type="file" class="upload" id="file" on-change="_fileChange"/>
+    </paper-button>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'paper-file-input',
+
+    properties: {
+      file_name : {
+        type : String,
+        value : "Select A File"
+      }
+    },
+    get file(){
+      return this.$.file.files[0]
+    },
+    _fileChange : function(){
+      this.file_name = this.file.name;
+    }
+  });
+})();
+</script>

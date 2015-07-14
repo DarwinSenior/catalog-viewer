@@ -1,0 +1,57 @@
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<dom-module id="collapsable-item">
+  <style>
+    :host {
+      display: block;
+      width: 100%;
+      overflow-y : visible;
+    }
+    .item-head {
+      display: inline-block;
+      margin: 0;
+      width: 100%;
+      font-size: 18px;
+      text-align: left;
+      padding: 5px 10px;
+      background-color: var(--paper-grey-900);
+    }
+    .title{
+      color : white;
+    }
+  </style>
+  <template>
+    <paper-button class="item-head" on-click="toggle">
+      <div class="layout horizontal title">
+        <span class="flex">[[title]]</span>
+        <iron-icon icon="[[collapse_icon]]"></iron-icon>
+      </div>
+    </paper-button>
+    <iron-collapse id="collapse">
+      <content></content>
+    </iron-collapse>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'collapsable-item',
+    properties: {
+      title: {
+        type: String,
+        value: 'Untitled'
+      },
+      collapse_icon : {
+        type : String,
+        value : "expand-less"
+      }
+    },
+    toggle : function(){
+      console.log("hello");
+      this.$.collapse.toggle();
+      this.collapse_icon = this.collapse_icon=="expand-more" ? "expand-less" : "expand-more";
+    }
+  });
+})();
+</script>
