@@ -35,6 +35,9 @@
     "paper-toolbar": "PolymerElements/paper-toolbar#^1.0.0",
     "polymer": "Polymer/polymer#^1.0.0",
     "qwest": "~1.7.0",
-    "neon-page-behavior": "vguillou/neon-page-behavior#master"
+    "neon-page-behavior": "vguillou/neon-page-behavior#master",
+    "paper-material": "PolymerElements/paper-material#^1.0.0",
+    "paper-ripple": "PolymerElements/paper-ripple#^1.0.0",
+    "paper-slider": "PolymerElements/paper-slider#^1.0.0"
   }
 }

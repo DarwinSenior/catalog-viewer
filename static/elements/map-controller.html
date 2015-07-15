@@ -26,6 +26,9 @@
       background-color: var(--paper-grey-100);
       margin: 10px;
     }
+    #slider{
+      height: 20px;
+    }
   </style>
   <template>
     <paper-toolbar class="medium-tall">
@@ -46,6 +49,12 @@
         <template is="dom-repeat" items="[[_getColorOptions(data)]]">
           <paper-radio-button class="green" name="[[item.color]]" disabled="[[!item.isNumber]]">[[item.color]]</paper-radio-button>
         </template>
+        <div class="layout horizontal" width="100%">
+          <span>[[_minVal(_selected)]]</span>
+          <paper-double-slider id="slider" class="flex" min="[[_minVal(_selected)]]" max="[[_maxVal(_selected)]]" valuemin="{{_rangeLeft}}" valuemax="{{_rangeRight}}">
+          </paper-double-slider>
+          <span>[[_maxVal(_selected)]]</span>
+        </div>
         </paper-radio-group>
         <heatmap-picker 
           leftcolor="{{_mincolor}}"
@@ -71,16 +80,28 @@
         type : Object,
         notify : true,
         // value : {selected : "", maxcolor : 'red', mincolor : 'red'},
-        computed : '_colorScheme(_selected, _maxcolor, _mincolor)'
+        computed : '_colorScheme(_selected, _maxcolor, _mincolor, _rangeLeft, _rangeRight)'
       },
       _maxcolor : {
-        type : String
+        type : String,
+        notify : true
       },
       _mincolor : {
-        type : String
+        type : String,
+        notify : true
       },
       _selected : {
-        type : String
+        type : String,
+        notify : true,
+        observer : '_handleSelected'
+      },
+      _rangeLeft : {
+        type : Number,
+        notify : true
+      },
+      _rangeRight : {
+        type : Number,
+        notify : true
       },
       requiredinfo :{
         type : Object
@@ -91,9 +112,15 @@
     _return : function(){
       this.fire('page-map-return');
     },
-    _colorScheme : function(_selected, _maxcolor, _mincolor){
+    _colorScheme : function(_selected, _maxcolor, _mincolor, _rangeLeft, _rangeRight){
       console.log('updated');
-      return {selected: _selected, maxcolor: _maxcolor, mincolor: _mincolor};
+      return {
+        selected: _selected, 
+        maxcolor: _maxcolor, 
+        mincolor: _mincolor, 
+        rangeleft: _rangeLeft,
+        rangeright : _rangeRight
+      };
     },
     _getColorOptions : function(){
       var data = this.data;
@@ -103,6 +130,15 @@
           isNumber : (data[item].type=='INT' || data[item].type=="FLOAT")
         };
       });
+    },
+    _maxVal : function(_selected){
+      return (this.data[_selected].max).toPrecision(4);
+    },
+    _minVal : function(_selected){
+      return (this.data[_selected].min).toPrecision(4);
+    },
+    _handleSelected : function(_selected){
+      this.$.slider.resize();
     }
   });
 })();

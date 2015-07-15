@@ -27,6 +27,9 @@
         </template>
       </tbody>
     </table>
+    <template is="dom-if" if="[[_isEmpty(data)]]">
+      <h3>Nothing to display yet</h3>
+    </template>
   </div>
   </template>
 </dom-module>
@@ -53,6 +56,9 @@
     },
     datachange : function(){
       this.playAnimation('datachange');
+    },
+    _isEmpty : function(data){
+      return data.length==0;
     }
   });
 })();

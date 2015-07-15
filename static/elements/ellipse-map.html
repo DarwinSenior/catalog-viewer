@@ -75,7 +75,6 @@
       if (this.vector_layer){
         this.map.removeLayer(this.vector_layer);
         this.vector_layer = undefined;
-        this._setDefaultPosition();
       }
         this._addLayer();
     },
@@ -87,12 +86,11 @@
     Example : "white" || "#00000" || "rgb(0,0,0)"
     */
     changeColor : function(scheme){
-      console.log('changed');
       if (scheme && scheme.selected && this.data){
-        var min = this.data[scheme.selected].min;
-        var max = this.data[scheme.selected].max;
+        var min = scheme.rangeleft;
+        var max = scheme.rangeright;
         colorAlg = function(d){
-          var scale = (d[scheme.selected]-min)/(max-min);
+          var scale = Math.max(0, Math.min((d[scheme.selected]-min)/(max-min), 1));
           return d3.interpolateHsl(scheme.mincolor || 'white', scheme.maxcolor || 'white')(scale);
         }
         this.drawer.changeColor(colorAlg);
@@ -114,12 +112,13 @@
     Set to the center of the coverage of the map,
     and find the appropriate zoom level
     */
-    _setDefaultPosition : function(){
+    setDefaultPosition : function(){
       var midpoint = this._RADEC2Scale([
         (this.data.RA.max+this.data.RA.min)/2,
         (this.data.DEC.max+this.data.DEC.min)/2]);
       var pos = this.map.layerPointToLatLng(midpoint);
       this.map.setView(pos);
+      this.map.setZoom(10);
     },
     resize : function(){
       this.map.invalidateSize(true);

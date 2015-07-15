@@ -21,12 +21,12 @@ Drawer.prototype.drawer = function(data, tile){
 						.attr('y', 0)
 						.attr('fill', 'black');
 
-	var text = svg.append('text')
-				.attr("text-anchor", "middle")
-				.attr("x", 128)
-				.attr("y", 120)
-				.attr('fill', "white")
-				.text(data.text);
+	// var text = svg.append('text')
+	// 			.attr("text-anchor", "middle")
+	// 			.attr("x", 128)
+	// 			.attr("y", 120)
+	// 			.attr('fill', "white")
+	// 			.text(data.text);
 
 	var items = data.data.map((function(item){
 		return this._getEllipseData(item, data.bound);

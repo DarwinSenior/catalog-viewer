@@ -1,0 +1,165 @@
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="../bower_components/paper-styles/paper-styles.html">
+
+<dom-module id="paper-double-slider">
+  <style>
+    :host {
+      display: inline-block;
+      position: relative;
+      height : 100%;
+      width: 95%;
+      margin: auto;
+    }
+    .axis {
+      stroke : var(--paper-grey-100);
+      stroke-width : 2px;
+    }
+    .active {
+      stroke : var(--paper-deep-orange-700);
+      stroke-width : 4px;
+    }
+    .handle {
+      fill : var(--paper-deep-orange-500);
+    }
+    
+  </style>
+  <template>
+  </template>
+</dom-module>
+<script>
+(function() {
+  Polymer({
+    is: 'paper-double-slider',
+    properties: {
+      min : {
+        type : Number,
+        value : 0
+      },
+      max : {
+        type : Number,
+        value : 100
+      },
+      valuemin : {
+        type : Number,
+        value : 0,
+        notify : true,
+        observer : '_setLeft'
+      },
+      valuemax : {
+        type : Number,
+        value : 100,
+        notify : true,
+        observer : '_setRight'
+      }
+    },
+    resize : function(){
+              var offset = this.offset;
+              this.line.classed('axis', true)
+                  .attr('x1', '0%').attr('x2', '100%')
+                  .attr('y1', "50%").attr('y2', "50%")
+                  .style({'stroke' : '#BDBDBD',
+                          'stroke-width' : '2px'});
+              this.ball1.classed('handle', true)
+                  .attr('cx', offset).attr('cy', '50%')
+                  .attr('r', '8px')
+                  .attr('fill', '#FF5722')
+                  .style('visibility', 'visable');
+              this.ball2.classed('handle', true)
+                  .attr('cx', offset+this.width).attr('cy', '50%')
+                  .attr('r', '8px')
+                  .attr('fill', '#FF5722')
+                  .style('visibility', 'visable');
+              this.lineactive.classed('active', true)
+                  .attr('x1', offset).attr('x2', offset+this.width)
+                  .attr('y1', "50%").attr('y2', "50%")
+                  .style({'stroke' : '#E64A19',
+                          'stroke-width' : '3px',
+                          'visibility': 'visable'});
+              this.valuemax = this.max;
+              this.valuemin = this.min;
+    },
+    attached : function(){
+      this.svg = d3.select(this).append('svg:svg')
+                    .attr('height',"100%")
+                    .attr('width', '100%');
+
+      var offset = this.offset = 10;
+      this.line = this.svg.append('line');
+
+      this.lineactive = this.svg.append('line');
+                    
+      this.ball1 = this.svg.append('circle');
+                      
+      this.ball2 = this.svg.append('circle');
+                     
+
+      var self = this;
+      drag = d3.behavior.drag();
+      drag.on('dragstart', function(){
+        d3.event.sourceEvent.stopPropagation();
+        d3.select(this).transition().attr('r', '16px');
+      });
+
+      drag.on('drag', function(){
+        var width = self.width;
+        var offset = 5;
+        var x = Math.min(Math.max(d3.event.x, offset), offset+width);
+        d3.select(this).attr('cx', x);
+        var x1 = self.ball1.attr('cx');
+        var x2 = self.ball2.attr('cx');
+        self.lineactive.attr('x1', Math.min(x1, x2)).attr('x2', Math.max(x1, x2));
+      });
+
+      drag.on('dragend', function(){
+        d3.event.sourceEvent.stopPropagation();
+        d3.select(this).transition().attr('r', '8px');
+        self._update();
+      });
+
+      this.ball1.call(drag);
+      this.ball2.call(drag);
+    },
+    get width(){
+      if (this.svg){
+        return this.offsetWidth-this.offset*2;
+      }else{
+        return 0;
+      }
+    },
+    _update : function(){
+      var x1 = this.ball1.attr('cx');
+      var x2 = this.ball2.attr('cx');
+      if (x1 > x2){
+        var tmp1 = this.ball1;
+        this.ball1 = this.ball2;
+        this.ball2 = tmp1;
+        tmp1 = x1;
+        x1 = x2;
+        x2 = tmp1;
+      }
+      var width = this.width;
+      var offset = this.offset;
+      var range = (+this.max)-(+this.min);
+      this.valuemin = (+this.min)+(x1-offset)/width*range;
+      this.valuemax = (+this.min)+(x2-offset)/width*range;
+    },
+    _setLeft : function(){
+      if (this.ball1){
+        var width = this.width;
+        var offset = this.offset;
+        var range = this.max-this.min;
+        var x1 = ((+this.valuemin)-(+this.min))/range*width+offset;
+      }
+    },
+    _setRight : function(){
+      if (this.ball2){
+        var width = this.width;
+        var offset = this.offset;
+        var range = this.max-this.min;
+        var x2 = ((+this.valuemax)-(+this.min))/range*width+offset;
+        this.ball2.attr('cx', x2);
+      }
+    }
+  });
+})();
+</script>

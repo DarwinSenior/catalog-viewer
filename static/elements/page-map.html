@@ -9,19 +9,25 @@
       display: block;
       height : 100vh;
       width: 100vw;
+      position: relative;
     }
     #mapcontent {
       display: block;
+      position: absolute;
       height : 100vh;
-      float: left;
+      margin-left: 30vw;
       width: 70vw;
       background-color: var(--paper-grey-800);
     }
+    #sidebar-wrapper{
+      overflow: scroll;
+      height: 100vh;
+      width: 100vw;
+      position: absolute;
+    }
     #sidebar {
       display: block;
-      height: 100vh;
-      overflow: scroll;
-      float: left;
+      margin-left: 0;
       width: 30vw;
       background-color: var(--paper-grey-50);
       overflow: visible;
@@ -31,8 +37,10 @@
     }
   </style>
   <template>
+    <div id='sidebar-wrapper'>
     <div id="sidebar">
-      <map-controller title="[[_getTitle(data)]]" data="[[data]]" colorscheme="{{colorscheme}}" requiredinfo="[[requiredinfo]]"></map-controller>
+      <map-controller id="controller" title="[[_getTitle(data)]]" data="[[data]]" colorscheme="{{colorscheme}}" requiredinfo="[[requiredinfo]]"></map-controller>
+    </div>
     </div>
     <div id="mapcontent">
         <ellipse-map id="themap" data="[[data]]" requiredinfo="{{requiredinfo}}" colorscheme="[[colorscheme]]"></ellipse-map>
@@ -90,6 +98,8 @@
     enter: function() {
       this.status = 'enter';
       this.$.themap.resize();
+      this.$.themap.setDefaultPosition();
+      this.$.controller.$.slider.resize();
     },
     _getTitle : function(data){
       return (data.NAME || "untitled");
