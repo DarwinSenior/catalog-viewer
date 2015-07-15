@@ -1,11 +1,8 @@
 from flask import Flask, Response, request
-from flask.ext.cors import CORS
 import json
 import data
 app = Flask(__name__, static_url_path="")
 
-
-CORS(app, resources=r'/*', allow_headers='Content-Type')
 
 @app.route("/")
 def hello():
