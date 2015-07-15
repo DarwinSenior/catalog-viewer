@@ -103,6 +103,10 @@ def getMetaData(data):
 
 # =============== map utility =================
 
+def bound(number, domain):
+    (lower, higher) = domain
+    return (number - lower) % (higher - lower) + lower
+
 def ratioScale(coord):
     '''
     scale an (lng, lat) from [(-180,-90), (180, 90)] to [(0,0), (1,1)]
