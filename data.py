@@ -112,7 +112,7 @@ def ratioScale(coord):
     scale an (lng, lat) from [(-180,-90), (180, 90)] to [(0,0), (1,1)]
     '''
     lng, lat = coord
-    return (lng + 180)/360, (lat + 90)/180
+    return (lng + 180.)/360., (lat + 90.)/180.
 
 
 def geoScale(point):
@@ -120,11 +120,11 @@ def geoScale(point):
     scale an (x,y) from [(0,0), (1,1)] to [(-180,-90), (180, 90)]
     '''
     x, y = point
-    return x*360 - 180, y*180 - 90
+    return x*360. - 180., y*180. - 90.
 
 def areabound(tileCoord):
     x, y, z = tileCoord
-    size = 2**z
+    size = 2.**z
     lng1, lat1 = geoScale((x/size, y/size))
     lng2, lat2 = geoScale(((x + 1)/size, (y + 1)/size))
     return (lng1, lat1), (lng2, lat2)
@@ -162,11 +162,11 @@ def indexedItem(item):
     for each ellipses, we consider it as a square box for max boundary lng/lat(+/-)majorsemi
     thus, add 'loc' property
     '''
-    lng = item['RA'] - 180
+    lng = item['RA'] - 180.
     lat = item['DEC']
     a = item['A_IMAGE']*0.23/3600.0
-    latbound = [-90, 90]
-    lngbound = [-180, 180]
+    latbound = [-90., 90.]
+    lngbound = [-180., 180.]
     lng1, lng2 = bound(lng - a, lngbound), bound(lng + a, lngbound)
     lat1, lat2 = bound(lat - a, latbound), bound(lat + a, latbound)
     item['loc'] = {'type': 'Polygon', 'coordinates': [[[lng1, lat1], [lng2, lat1], [lng2, lat2], [lng1, lat2], [lng1, lat1]]]}
