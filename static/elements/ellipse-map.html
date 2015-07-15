@@ -61,7 +61,7 @@
     },
     _addLayer : function(){
       if (this.data._id){
-        var url = "http://localhost:5000/tile/"+this.data._id+"/{z}/{x}/{y}.json";
+        var url = "/tile/"+this.data._id+"/{z}/{x}/{y}.json";
         this.vector_layer = new L.SVGLayer(url, {
           maxZoom : this.maxZoom,
           attribution : "YDC"
