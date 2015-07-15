@@ -93,9 +93,9 @@ def getMetaData(data):
     meta = dict()
     header = meta['HEADER'] = list(data.columns)
     for column in header:
-        if data.dtype[column].name == 'float64':
+        if data.dtypes[column].name == 'float64':
             meta[column] = {'type': 'FLOAT', 'max': data[column].max(), 'min': data[column].min()}
-        elif data.dtype[column].name == 'int64':
+        elif data.dtypes[column].name == 'int64':
             meta[column] = {'type': 'FLOAT', 'max': data[column].max(), 'min': data[column].min()}
         else:
             meta[column] = {'type': 'String'}
