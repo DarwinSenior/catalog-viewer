@@ -50,10 +50,10 @@
           <paper-radio-button class="green" name="[[item.color]]" disabled="[[!item.isNumber]]">[[item.color]]</paper-radio-button>
         </template>
         <div class="layout horizontal" width="100%">
-          <span>[[_minVal(_selected)]]</span>
+          <span>[[_prettyPrint(_rangeLeft)]]</span>
           <paper-double-slider id="slider" class="flex" min="[[_minVal(_selected)]]" max="[[_maxVal(_selected)]]" valuemin="{{_rangeLeft}}" valuemax="{{_rangeRight}}">
           </paper-double-slider>
-          <span>[[_maxVal(_selected)]]</span>
+          <span>[[_prettyPrint(_rangeRight)]]</span>
         </div>
         </paper-radio-group>
         <heatmap-picker 
@@ -113,7 +113,6 @@
       this.fire('page-map-return');
     },
     _colorScheme : function(_selected, _maxcolor, _mincolor, _rangeLeft, _rangeRight){
-      console.log('updated');
       return {
         selected: _selected, 
         maxcolor: _maxcolor, 
@@ -139,6 +138,9 @@
     },
     _handleSelected : function(_selected){
       this.$.slider.resize();
+    },
+    _prettyPrint: function(val){
+      return (+val).toPrecision(4);
     }
   });
 })();

@@ -19,7 +19,12 @@
         </paper-toolbar>
         <item-button-group id="buttons"></item-button-group>
         <template is="dom-repeat" items="[[data]]">
-            <item-card for="[[item._id]]" title="[[item.NAME]]" description="[[item.DESCRIPTION]]"></item-card>
+            <item-card 
+              for="[[item._id]]" 
+              title="[[item.NAME]]" 
+              description="[[item.DESCRIPTION]]"
+              status="[[item.status]]">
+            </item-card>
         </template>
     </template>
 </dom-module>

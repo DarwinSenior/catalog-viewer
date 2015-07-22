@@ -2,6 +2,7 @@
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../bower_components/neon-animation/neon-animation.html">
 <link rel="import" href="../bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html">
 
 <dom-module id="item-card">
   <style>
@@ -34,8 +35,8 @@
   </style>
   <template>
     <paper-material elevation="[[_elevation]]" on-mouseover="_mouseover" on-mouseout="_mouseout">
-      <template is="dom-if" if="{{_isEntered(status)}}">
-      <div class="layout vertical wrapper">
+      <template is="dom-if" if="{{_isReady(status, display)}}">
+      <div on-click="_onOpen" class="layout vertical wrapper">
         <div class="title" id="title">[[title]]</div>
         <div class="content flex" id="description">
           <span>[[description]]</span>
@@ -46,6 +47,40 @@
         </div>
       </div>
       </template>
+      <template is="dom-if" if="{{_isProcessing(status, display)}}">
+        <div class="layout vertical wrapper">
+          <div class="title" id="title">[[title]]</div>
+          <div class="layout horizontal flex">
+            <div class="flex self-center">
+              <div class="vertical layout center">
+                <paper-spinner active></paper-spinner>
+              </div>
+            </div>
+          </div>
+          <div class="buttons layout horizontal-reverse" id="buttons">
+            <iron-icon icon="refresh" on-click="_refresh"></iron-icon>
+            <iron-icon icon="delete" on-click="_delete"></iron-icon>
+          </div>
+        </div>
+      </template>
+      <template is="dom-if" if="{{_isEmpty(status, display)}}">
+        <div class="layout vertical wrapper">
+          <div class="title" id="title">[[title]]</div>
+          <div class="layout horizontal flex">
+            <div class="flex self-center">
+              <div class="vertical layout center">
+                <span style="color: red;">
+                  There is a problem occured, please upload a new file or delete this one
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="buttons layout horizontal-reverse" id="buttons">
+            <iron-icon icon="file-upload"></iron-icon>
+            <iron-icon icon="delete" on-click="_delete"></iron-icon>
+          </div>
+        </div>
+      </template>
     </paper-material>
   </template>
 </dom-module>
@@ -53,72 +88,85 @@
 (function() {
   Polymer({
     is: 'item-card',
-    listeners : {
-      'click': '_onclick',
-      'neon-animation-finish' : '_onNeonAnimationFinish'
+    listeners: {
+      'neon-animation-finish' : '_onNeonAnimationFinish',
     },
     behaviors: [
       Polymer.NeonAnimationRunnerBehavior
     ],
     properties: {
-      title : {
-        type : String,
-        value : "Card"
+      title: {
+        type: String,
+        value: 'Card'
       },
-      "for" : {
-        type : String
+      'for': {
+        type: String
       },
-      _elevation :{
-        type : Number,
-        value : 0
+      _elevation:{
+        type: Number,
+        value: 0,
       },
-      description : {
-        type : String,
-        value : "This is the description of the card, hahah"
+      description: {
+        type: String,
+        value: 'This is the description of the card, hahah',
       },
-      animationConfig : {
-        type : Object,
-        value : {entry: undefined, exit: undefined}
+      animationConfig: {
+        type: Object,
+        value: {entry: undefined, exit: undefined},
       },
-      status : {
-        type : String,
-        value : 'enter'
-      }
+      status: {
+        type: String,
+        reflectToAttribute: true,
+      },
+      display: {
+        type: String,
+        value: 'enter',
+        reflectToAttribute: true,
+      },
     },
-    attached : function(){
+    attached: function(){
       var nodes = [this.$.title, this.$.description, this.$.buttons]
-      this.animationConfig.entry = {name : 'cascaded-animation', animation : 'fade-in-animation', nodes : nodes};
-      this.animationConfig.exit = {name : 'cascaded-animation', animation : 'fade-out-animation', nodes : nodes};
+      this.animationConfig.entry = {name: 'cascaded-animation', animation: 'fade-in-animation', nodes: nodes};
+      this.animationConfig.exit = {name: 'cascaded-animation', animation: 'fade-out-animation', nodes: nodes};
     },
-    _onclick : function(){
-      this.fire("openCard", {target : this, pageurl : this['for']});
+    _onOpen: function(){
+      this.fire("openCard", {target: this, pageurl: this['for']});
     },
-    _mouseout : function(){
+    _mouseout: function(){
       this._elevation = 0;
     },
-    _mouseover : function(){
+    _mouseover: function(){
       this._elevation = 2;
     },
-    _onNeonAnimationFinish : function(){
+    _onNeonAnimationFinish: function(){
     },
-    exit : function(){
-      this.status = 'exit';
+    exit: function(){
+      this.display = 'exit';
       // this.playAnimation('exit');
     },
-    enter : function(){
-      this.status = 'enter';
+    enter: function(){
+      this.display = 'enter';
       // this.playAnimation('entry');
     },
-    _delete : function(evt){
+    _delete: function(evt){
       qwest.delete('/maps', {id : this['for']})
           .then((function(data){
             this.fire('update', data);
           }).bind(this));
       evt.stopPropagation();
     },
-    _isEntered : function(status){
-      return (status == "enter");
-    }
+    _isReady: function(status, display){
+      return (status=='ready' && display=='enter');
+    },
+    _isEmpty: function(status, display){
+      return (status=='empty' && display=='enter');
+    },
+    _isProcessing: function(status, display){
+      return (status=='processing' && display=='enter');
+    },
+    _refresh: function(item){
+      this.fire('update');
+    },
   });
 })();
 </script>

@@ -54,13 +54,36 @@
       }
     },
     attached : function(event){
+      this._getmaps();
+    },
+    _getmaps : function(){
       qwest.get('/maps', null).then((function(data){
         this.items = data;
       }).bind(this));
     },
     _handleUpdate : function(event, items){
-      this.items = items;
-    }
+      /*
+       * if the items are not defined
+       * this send a get request for the newest update,
+       * else, just update the data
+       */
+      console.log(items); 
+      if (!items){
+        console.log("Empty");
+        this._getmaps();
+      }else if (Array.isArray(items)){
+        console.log("Array");
+        this.items = items;
+      }else if (items['$push']){
+        // this.items.push(items['$push']);
+        this.items = this.items.concat(items['$push']);
+      }
+      // if (Array.isArray(items)){
+      //   this.items = items;
+      // }else{
+      //   this._getmaps();
+      // }
+    },
   });
 })();
 </script>

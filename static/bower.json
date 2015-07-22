@@ -38,6 +38,7 @@
     "neon-page-behavior": "vguillou/neon-page-behavior#master",
     "paper-material": "PolymerElements/paper-material#^1.0.0",
     "paper-ripple": "PolymerElements/paper-ripple#^1.0.0",
-    "paper-slider": "PolymerElements/paper-slider#^1.0.0"
+    "paper-slider": "PolymerElements/paper-slider#^1.0.0",
+    "leaflet.fullscreen": "https://github.com/brunob/leaflet.fullscreen.git#~1.1.4"
   }
 }

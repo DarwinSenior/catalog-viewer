@@ -41,9 +41,13 @@
     get file(){
       return this.$.file.files[0]
     },
-    _fileChange : function(){
+    _fileChange: function(){
       this.file_name = this.file.name;
-    }
+    },
+    clear: function(){
+      this.file_name = "Select A File";
+      this.$.file.value = "";
+    },
   });
 })();
 </script>

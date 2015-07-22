@@ -127,8 +127,8 @@
       }
     },
     _update : function(){
-      var x1 = this.ball1.attr('cx');
-      var x2 = this.ball2.attr('cx');
+      var x1 = +this.ball1.attr('cx');
+      var x2 = +this.ball2.attr('cx');
       if (x1 > x2){
         var tmp1 = this.ball1;
         this.ball1 = this.ball2;

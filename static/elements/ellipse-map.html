@@ -1,6 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="stylesheet" href="../bower_components/Leaflet.MousePosition/src/L.Control.MousePosition.css" type="text/css" />
+<link rel="stylesheet" href="../bower_components/leaflet.fullscreen/Control.FullScreen.css">
+
 <script src="../scripts/Drawer.js"></script>
+<script src="../scripts/Boundary.js"></script>
 <script src="../scripts/L.SVGLayer.js"></script>
+<script src="../bower_components/Leaflet.MousePosition/src/L.Control.MousePosition.js"></script>
+<script src="../bower_components/leaflet.fullscreen/Control.FullScreen.js"></script>
 <dom-module id="ellipse-map">
   <style>
     :host {
@@ -42,7 +48,7 @@
         type : Object,
         notify : true,
         observer : 'changeColor'
-      }
+      },
     },
     ready : function(){
       this.drawer = new Drawer();
@@ -53,21 +59,60 @@
           data.push({name : key, value : d[key].toString()});
         }
         this.requiredinfo = data;
+        d3.event.stopPropagation();
       }).bind(this));
     },
     attached : function(){
-      this.map = L.map(this.$.map).setView([-1.076704067725527,143.09487462043765], 16);
+      this.map = L.map(this.$.map,{
+        center: [0,0],
+        zoom: 10,
+        maxZoom: 13,
+        crs: L.CRS.Simple,
+        fullscreenControl: true,
+        fullscreenControlOptions: {
+          position: 'topleft',
+        },
+      });
+
+
+      L.control.mousePosition({
+          position: 'bottomright',
+          separator: '/',
+          lngFormatter: (function(lng){return "<RA>"+(lng+180)}),
+          latFormatter: (function(lat){return "<DEC>"+(lat)}),
+      }).addTo(this.map);
+
       this._addLayer();
     },
     _addLayer : function(){
       if (this.data._id){
+
+        // var bound = this.drawer.bound();
+        var rightbottom = this._RADEC2Scale([this.data.RA.max, this.data.DEC.max]);
+
+        if (!this.boundary_layer){
+            this.boundary_layer = new BoundLayer(this.map);
+        }
+        // console.log(this.boundary_layer.bound);
+        var lefttop = this._RADEC2Scale([this.data.RA.min, this.data.DEC.min]);
+        var rightbottom = this._RADEC2Scale([this.data.RA.max, this.data.DEC.max]);
+        
+        this.boundary_layer.bound({
+            top: lefttop.y,
+            bottom: rightbottom.y,
+            left: lefttop.x,
+            right: rightbottom.x,
+        });
         var url = "/tile/"+this.data._id+"/{z}/{x}/{y}.json";
+
         this.vector_layer = new L.SVGLayer(url, {
           maxZoom : this.maxZoom,
           attribution : "YDC"
         }, 
         this.drawer.drawer.bind(this.drawer), 
         this.drawer.cleaner.bind(this.drawer));
+
+        this.boundary_layer.reset();
         this.map.addLayer(this.vector_layer);
       }
     },
@@ -76,15 +121,15 @@
         this.map.removeLayer(this.vector_layer);
         this.vector_layer = undefined;
       }
-        this._addLayer();
+      this._addLayer();
     },
     /*
-    The color scheme of type Data -> Color
-    where Data is a dictionary specified by json file returned
-    Example {RA : <Number>, DEC : <Number>, THETA : <Number> ...}
-    where Color is a string which conforms to CSS spec for color 
-    Example : "white" || "#00000" || "rgb(0,0,0)"
-    */
+     * The color scheme of type Data -> Color
+     * where Data is a dictionary specified by json file returned
+     * Example {RA : <Number>, DEC : <Number>, THETA : <Number> ...}
+     * where Color is a string which conforms to CSS spec for color 
+     * Example : "white" || "#00000" || "rgb(0,0,0)"
+     */
     changeColor : function(scheme){
       if (scheme && scheme.selected && this.data){
         var min = scheme.rangeleft;
@@ -97,11 +142,11 @@
       }
     },
     /*
-    The position returns {zoom: <int>, center: <LatLng>} 
-    if newValue is defined, the map will set new position 
-    and return the newest position, and newValue shall
-    be in the form {zoom: <int>, center: <LatLng>}
-    */
+     * The position returns {zoom: <int>, center: <LatLng>} 
+     * if newValue is defined, the map will set new position 
+     * and return the newest position, and newValue shall
+     * be in the form {zoom: <int>, center: <LatLng>}
+     */
     position : function(newValue){
       if (newValue){
         this.map.setView(newValue);
@@ -109,16 +154,17 @@
       return this.map.getView();
     },
     /*
-    Set to the center of the coverage of the map,
-    and find the appropriate zoom level
-    */
+     * Set to the center of the coverage of the map,
+     * and find the appropriate zoom level
+     */
     setDefaultPosition : function(){
+      // console.log("position set!");      
       var midpoint = this._RADEC2Scale([
         (this.data.RA.max+this.data.RA.min)/2,
         (this.data.DEC.max+this.data.DEC.min)/2]);
-      var pos = this.map.layerPointToLatLng(midpoint);
-      this.map.setView(pos);
-      this.map.setZoom(10);
+      var pos = this.map.unproject([midpoint.x*256, midpoint.y*256], 0);
+
+      this.map.setView(pos, 10, {reset: true, animate: false});
     },
     resize : function(){
       this.map.invalidateSize(true);
@@ -127,16 +173,20 @@
       var data = this.data;
     },
     /*
-    The input shall be a pair of ra and dec,
-    thus, output the ratio of where the point is located
-    */
+     * The input shall be a pair of ra and dec,
+     * thus, output the ratio of where the point is located
+     * output shall be (x, y) pair
+     */
     _RADEC2Scale : function(point){
       // lng = item['RA'] - 180
       // lat = item['DEC']
       var lng = point[0]-180,
-          lat = point[1]
-      return [(lng + 180)/360, (lat + 90)/180]
-    }
+          lat = point[1];
+      return {
+        x: (lng+180)/360,
+        y: (lat+90)/180,
+      };
+    },
   });
 })();
 </script>

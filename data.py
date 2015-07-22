@@ -1,6 +1,6 @@
 import pymongo as pmg
 import pandas as pd
-from bson.objectid import ObjectId
+from bson import ObjectId
 
 client = pmg.MongoClient('localhost', 27017)
 db = client['database']
@@ -17,23 +17,66 @@ def getMaps():
 
     return [convert(item) for item in meta_collection.find()]
 
-def createMap(csv, info):
+
+def addCSVToMap(_id, csv):
     '''
-    Create Map Collection with the CSV FILE and info
-    It will then return the ID of the instance.
-    Each entry will have the following infos
-    ["NAME", "DESCRIPTION", "HEADER", <ENTRY>] // capitalised since it is meta :)
-    return the new_id:String if successful or None if failed
+    Add CSV file to the map, if it is empty
+    If error or the status is not empty, 
+    return False else return True
     '''
-    data = pd.read_csv(csv)
-    meta = getMetaData(data)
-    meta['NAME'] = info['NAME']
-    meta['DESCRIPTION'] = info['DESCRIPTION']
+    finder = {'_id': ObjectId(_id)}
+    try:
+        if meta_collection.find_one(finder)['status']!='empty':
+            return False
+        meta_collection.find_one_and_update(finder, {'$set': {'status': 'processing'}})
+        data = pd.read_csv(csv)
+        new_collection = createMapCollection(_id)
+        meta = getMetaData(data)
+        meta['status'] = 'ready'
+        insertCSV(new_collection, data)
+        meta_collection.find_one_and_update(finder, {'$set': meta})
+        return True
+    except:
+        meta_collection.find_one_and_update(finder, {'$set': {'status': 'empty'}})
+        meta_collection.find_one_and_delete(finder)
+        return False
+
+
+ 
+def createMap(info):
+    '''
+    Create this map with Name and Description
+    and then return the ID of the instance
+    also it will set the status of this instance 
+    as 'empty'.
+    There are 4 kinds of status
+    'empty' : this instance has not been initialised yet, file to be added, or there is an error
+    'processing' : there is another process that is dealing with the data
+    'ready' : the file added, thus ready for view
+    '''
+    meta = dict()
+    meta['NAME'] = info['NAME'] or 'undefined'
+    meta['DESCRIPTION'] = info['DESCRIPTION'] or ""
+    meta['status'] = 'empty'
     result = meta_collection.insert_one(meta)
     new_id = str(result.inserted_id)
-    new_collection = createMapCollection(new_id)
-    insertCSV(new_collection, data)
-    return new_id
+    newmeta = meta_collection.find_one({'_id': ObjectId(new_id)})
+    newmeta['_id'] = str(newmeta['_id'])
+    return newmeta
+
+   
+
+def modifyMap(_id, info):
+    '''
+    The Name and the descriptions are two items are allowed to modify
+    '''
+    meta = meta_collection.find_one({"_id": ObjectId(_id)})
+    meta['NAME'] = info['NAME'] or meta['NAME']
+    meta['DESCRIPTION'] = info['NAME'] or meta['DESCRIPTION']
+    result = meta_collection.find_one_and_update(
+            {"_id": ObjectId(_id)},
+            {"$set": meta})
+    return result
 
 def deleteMap(_id):
     '''
