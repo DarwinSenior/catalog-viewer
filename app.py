@@ -20,10 +20,10 @@ def jsons(_id, x, y, z):
     """
     Returns the tile, look at leaflet for details
     """
-    count, objs = data.readRegion(data.db["map-%s"%_id], (x, y, z))
+    objs = data.readRegion(_id , (x, y, z))
     content = json.dumps({
                 "position": [x, y, z],
-                "count": count,
+                "count": len(objs),
                 "data": objs,
                 "bound" : data.areabound((x, y, z))
                 });

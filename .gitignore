@@ -1,3 +1,9 @@
-__pycache__
+__pycache__/
 static/bower_components/
 *.pyc
+database/
+cloud.key
+cloud.key.pub
+dockerfile
+statiac/
+

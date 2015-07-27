@@ -1,6 +1,7 @@
 import pymongo as pmg
 import pandas as pd
 from bson import ObjectId
+import logging
 
 client = pmg.MongoClient('localhost', 27017)
 db = client['database']
@@ -31,12 +32,16 @@ def addCSVToMap(_id, csv):
         meta_collection.find_one_and_update(finder, {'$set': {'status': 'processing'}})
         data = pd.read_csv(csv)
         new_collection = createMapCollection(_id)
+        cached_collection = creatMapCacheCollection(_id)
         meta = getMetaData(data)
         meta['status'] = 'ready'
         insertCSV(new_collection, data)
         meta_collection.find_one_and_update(finder, {'$set': meta})
         return True
-    except:
+    except Exception as err:
+        logging.exception('exception happend')
+        noncachedCollection(_id).drop()
+        cachedCollection(_id).drop()
         meta_collection.find_one_and_update(finder, {'$set': {'status': 'empty'}})
         meta_collection.find_one_and_delete(finder)
         return False
@@ -84,25 +89,60 @@ def deleteMap(_id):
     return _id:String if successful
     '''
     try:
-        db['map-%s'%_id].drop()
+        cachedCollection(_id).drop()
+        noncachedCollection(_id).drop()
         meta_collection.find_one_and_delete({'_id': ObjectId(_id)})
     except:
         return
 
-def readRegion(collection, tileCoord):
-    '''
-    collection by mongo collection
-    tileCoord by (x,y,z)
-    '''
+def readCachedRegion(collection, tileCoord):
+    """
+    Find the tileCoords in the cached tileCoords
+    If found, return the tile or just json file,
+    else return None for missing cache
+    """
+    data = collection.find_one({'loc': str(tileCoord)}, {'_id': 0, 'loc': 0})
+    return data['data'] if data else None
+
+def readUncachedRegion(collection, tileCoord):
+    """
+    tileCoord is an tuple consisting of (x,y,z)
+    """
     cursor = collection.find({
                             'loc': areaFilter(tileCoord), 
                             'B_IMAGE': sizeFilter(tileCoord)
                             }, {'_id': 0, 'loc': 0})
-    return cursor.count(), list(cursor)
+    return list(cursor)
 
 
+def readRegion(_id, tileCoord):
+    cached_collection = cachedCollection(_id)
+    nonecached_collection = noncachedCollection(_id)
+    data = readCachedRegion(cached_collection, tileCoord)
+    if data:
+        print('cached!')
+        return data
+    else:
+        print('not cached!')
+        data = readUncachedRegion(nonecached_collection, tileCoord)
+        if len(data)>0:
+            cached_collection.insert_one({'loc': str(tileCoord), 'data': data})
+        return data
 
 #=============== database utility ========================
+def cachedCollection(_id):
+    return db['mapcache-%s'%_id]
+
+def noncachedCollection(_id):
+    return db['map-%s'%_id]
+
+def creatMapCacheCollection(_id):
+    """
+    Create the map collection for cache tile system
+    """
+    collection = db.create_collection('mapcache-%s'%_id)
+    collection.create_index('loc')
+
 def createMapCollection(_id):
     '''
     create the map collection with the corrent id,

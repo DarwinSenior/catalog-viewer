@@ -5,105 +5,105 @@
 <link rel="import" href="../bower_components/iron-autogrow-textarea/iron-autogrow-textarea.html">
 <link rel="import" href="../bower_components/iron-input/iron-input.html">
 <link rel="import" href="./paper-file-input.html">
-<dom-module id="item-button-group">
-  <style>
-    :host {
-      display: block;
-      position: absolute;
-      bottom: 0px;
-      left: 0px;
-      right: 0px;
-      top: 0px;
-    }
-    paper-fab{
-      position: absolute;
-    }
-    paper-fab[icon="add"]{
-      background-color: var(--paper-red-600);
-      bottom: 20px;
-      right: 10px;
-    }
-    paper-dialog#modal_add{
-      height: 60%;
-    }
-    .header{
-      margin: 0 20px;
-      padding: 10px;
-      border-bottom: black solid 2px;
-    }
-    .content{
-      margin: 10px 25%;
-    }
-    .wrapper{
-      height: 100%;
-    }
-  </style>
-  <template>
-    <paper-fab icon="add" on-click="_open_add"></paper-fab>
-    <paper-dialog id="modal_add" modal
-      entry-animation="slide-from-right-animation"
-      exit-animation="slide-left-animation">
-      <div class="layout vertical wrapper">
-        <div class="header">
-          <h1>CREATE A NEW MAP</h1>
+  <dom-module id="item-button-group">
+    <style>
+      :host {
+        display: block;
+        position: absolute;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+      }
+      paper-fab{
+        position: absolute;
+      }
+      paper-fab[icon="add"]{
+        background-color: var(--paper-red-600);
+        bottom: 20px;
+        right: 10px;
+      }
+      paper-dialog#modal_add{
+        height: 60%;
+      }
+      .header{
+        margin: 0 20px;
+        padding: 10px;
+        border-bottom: black solid 2px;
+      }
+      .content{
+        margin: 10px 25%;
+      }
+      .wrapper{
+        height: 100%;
+      }
+    </style>
+    <template>
+      <paper-fab icon="add" on-click="_open_add"></paper-fab>
+      <paper-dialog id="modal_add" modal
+        entry-animation="slide-from-right-animation"
+        exit-animation="slide-left-animation">
+        <div class="layout vertical wrapper">
+          <div class="header">
+            <h1>CREATE A NEW MAP</h1>
+          </div>
+          <div class="content" class="flex layout vertical">
+            <paper-input-container>
+              <label>Name</label>
+              <input is="iron-input" id="input_name">
+            </paper-input-container>
+            <paper-input-container>
+              <label>DESCRIPTION</label>
+              <input is="iron-input" id="input_description">
+            </paper-input-container>
+            <paper-file-input id="input_file"></paper-file-input>
+          </div>
+          <div class="layout horizontal-reverse">
+            <paper-button dialog-confirm autofocus on-click="submit">CREATE</paper-button>
+            <paper-button dialog-dismiss on-click="clear">CANCEL</paper-button>
+          </div>
         </div>
-        <div class="content" class="flex layout vertical">
-          <paper-input-container>
-            <label>Name</label>
-            <input is="iron-input" id="input_name">
-          </paper-input-container>
-          <paper-input-container>
-            <label>DESCRIPTION</label>
-            <input is="iron-input" id="input_description">
-          </paper-input-container>
-          <paper-file-input id="input_file"></paper-file-input>
-        </div>
-        <div class="layout horizontal-reverse">
-          <paper-button dialog-confirm autofocus on-click="submit">CREATE</paper-button>
-          <paper-button dialog-dismiss on-click="clear">CANCEL</paper-button>
-        </div>
-      </div>
-    </paper-dialog>
-  </template>
-  <script>
-  (function() {
-    Polymer({
-      is: 'item-button-group',
-      properties: {
-      },
-      _open_add: function(){
-        this.$.modal_add.open();
-      },
-      submit : function(event){
+      </paper-dialog>
+    </template>
+    <script>
+    (function() {
+      Polymer({
+        is: 'item-button-group',
+        properties: {
+        },
+        _open_add: function(){
+          this.$.modal_add.open();
+        },
+        submit : function(event){
 
-        var formdata = new FormData();
-        formdata.append('csv', this.$.input_file.file);
+          var formdata = new FormData();
+          formdata.append('csv', this.$.input_file.file);
 
-        qwest.put('/maps', {          
-          'name': this.$.input_name.value,
-          'description': this.$.input_description.value,
-        }).then((function(data){
+          qwest.put('/maps', {          
+            'name': this.$.input_name.value,
+            'description': this.$.input_description.value,
+          }).then((function(data){
 
-          data.status = 'processing';
-          this.fire('update', {'$push': data});
+            data.status = 'processing';
+            this.fire('update', {'$push': data});
 
-          formdata.append('id', data._id);
-          qwest.post('/maps/upload', formdata).then((function(data){
-            this.fire('update', data);
-            console.log('load complete');
+            formdata.append('id', data._id);
+            qwest.post('/maps/upload', formdata).then((function(data){
+              this.fire('update', data);
+              console.log('load complete');
+            }).bind(this));
+
           }).bind(this));
 
-        }).bind(this));
-
-        this.clear();
-      },
-      clear: function(){
-        this.$.input_file.clear();
-        this.$.input_name.value = "";
-        this.$.input_description.value = "";
-      },
-    })
-  })();
-  </script>
-</dom-module>
+          this.clear();
+        },
+        clear: function(){
+          this.$.input_file.clear();
+          this.$.input_name.value = "";
+          this.$.input_description.value = "";
+        },
+      })
+    })();
+    </script>
+  </dom-module>
 
