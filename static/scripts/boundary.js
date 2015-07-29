@@ -7,6 +7,7 @@
  */
 var BoundLayer = function(leafletmap, bound, color){
     this.color = color || '#90A4AE'; // the boundary color 
+    d3.select(leafletmap.getPanes().overlayPane).style({'pointer-events': 'none'});
     this.svg = d3.select(leafletmap.getPanes().overlayPane).append('svg:svg');
     this.map = leafletmap;
     this.g = this.svg.append('g').classed('leaflet-zoom-hide', true);
