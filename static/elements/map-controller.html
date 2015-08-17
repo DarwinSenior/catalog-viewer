@@ -1,13 +1,13 @@
 <link rel="import" href="../bower_components/paper-toolbar/paper-toolbar.html">
 <link rel="import" href="../bower_components/paper-header-panel/paper-header-panel.html">
 <link rel="import" href="../bower_components/paper-material/paper-material.html">
-<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
-<link rel="import" href="../bower_components/paper-radio-button/paper-radio-button.html">
 <link rel="import" href="../bower_components/paper-styles/paper-styles.html">
 
 <link rel="import" href="./collapsable-item.html">
 <link rel="import" href="./heatmap-picker.html">
 <link rel="import" href="./simple-data.html">
+<link rel="import" href="./select-color-ui.html">
+<link rel="import" href="./filter-ui.html">
 <dom-module id="map-controller">
   <style>
     :host {
@@ -41,24 +41,20 @@
       </paper-material>
     </collapsable-item>
 
-    <collapsable-item title="Settings">
+    <collapsable-item title="Map Filter Setting">
+      <template is="dom-repeat" items="[[_processdata(data)]]">
+        <filter-ui
+          name="[[item.name]]"
+          for="[[item.name]]"
+          rangeleft="[[item.min]]"
+          rangeright="[[item.max]]"
+          disabled="[[!item.isNumber]]">
+        </filter-ui>
+      </template>      
     </collapsable-item>
 
-    <collapsable-item title="Colour Map Setting">
-        <paper-radio-group selected="{{_selected}}">
-        <template is="dom-repeat" items="[[_getColorOptions(data)]]">
-          <paper-radio-button class="green" name="[[item.color]]" disabled="[[!item.isNumber]]">[[item.color]]</paper-radio-button>
-        </template>
-        <div class="layout horizontal" width="100%">
-          <span>[[_prettyPrint(_rangeLeft)]]</span>
-          <paper-double-slider id="slider" class="flex" min="[[_minVal(_selected)]]" max="[[_maxVal(_selected)]]" valuemin="{{_rangeLeft}}" valuemax="{{_rangeRight}}">
-          </paper-double-slider>
-          <span>[[_prettyPrint(_rangeRight)]]</span>
-        </div>
-        </paper-radio-group>
-        <heatmap-picker 
-          leftcolor="{{_mincolor}}"
-          rightcolor="{{_maxcolor}}"></heatmap-picker>
+    <collapsable-item title="Map Colour Setting">
+       <select-color-ui id="colorui" data="[[_processdata(data)]]"></select-color-ui> 
     </collapsable-item>
   </template>
 </dom-module>
@@ -76,68 +72,28 @@
       data : {
         type : Object
       },
-      colorscheme : {
-        type : Object,
-        notify : true,
-        // value : {selected : "", maxcolor : 'red', mincolor : 'red'},
-        computed : '_colorScheme(_selected, _maxcolor, _mincolor, _rangeLeft, _rangeRight)'
-      },
-      _maxcolor : {
-        type : String,
-        notify : true
-      },
-      _mincolor : {
-        type : String,
-        notify : true
-      },
-      _selected : {
-        type : String,
-        notify : true,
-        observer : '_handleSelected'
-      },
-      _rangeLeft : {
-        type : Number,
-        notify : true
-      },
-      _rangeRight : {
-        type : Number,
-        notify : true
-      },
-      requiredinfo :{
+      requiredinfo: {
         type : Object
-      }
+      },
     },
     ready : function(){
     },
     _return : function(){
       this.fire('page-map-return');
     },
-    _colorScheme : function(_selected, _maxcolor, _mincolor, _rangeLeft, _rangeRight){
-      return {
-        selected: _selected, 
-        maxcolor: _maxcolor, 
-        mincolor: _mincolor, 
-        rangeleft: _rangeLeft,
-        rangeright : _rangeRight
-      };
-    },
-    _getColorOptions : function(){
-      var data = this.data;
-      return (data.HEADER || []).map(function(item){
-        return {
-          color : item, 
-          isNumber : (data[item].type=='INT' || data[item].type=="FLOAT")
-        };
-      });
-    },
-    _maxVal : function(_selected){
-      return (this.data[_selected].max).toPrecision(4);
-    },
-    _minVal : function(_selected){
-      return (this.data[_selected].min).toPrecision(4);
-    },
-    _handleSelected : function(_selected){
-      this.$.slider.resize();
+    _processdata: function(data){
+      var processed_data = [];
+      for (key in data){
+        if (data[key].type){
+          processed_data.push({
+            name: key,
+            min: data[key].min,
+            max: data[key].max,
+            isNumber: data[key].type=='FLOAT' || data[key].type=='INT',
+          })
+        }
+      }
+      return processed_data;
     },
     _prettyPrint: function(val){
       return (+val).toPrecision(4);

@@ -1,0 +1,106 @@
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="./paper-double-slider.html">
+
+<dom-module id="filter-ui">
+    <style>
+    :host {
+        display : block;
+        @apply --layout;
+        @apply --layout-horizontal;
+        @apply --layout-left;
+        width: 100%
+        padding: 10px 5px;
+    }
+    </style>
+    <template>
+      <paper-checkbox class="flex filter-checker" checked="{{chosen}}" disabled="[[disabled]]">[[name]]</paper-checkbox>
+      <div class="flex layout horizontal" id="sliding">
+        <span>[[_prettyPrint(min)]]</span>
+        <paper-double-slider
+          class="filter-slider flex"
+          id="slider"
+          style="height: 19px;"
+          min="{{rangeleft}}"
+          max="{{rangeright}}"
+          valuemin="{{min}}" 
+          valuemax="{{max}}">
+        </paper-double-slider>
+        <span>[[_prettyPrint(max)]]</span>
+      </div>
+    </template>
+    <script>
+    (function(){
+        Polymer({
+            is: "filter-ui",
+            observers: ['_changed(min, max, chosen)'],
+            properties: {
+              name: {
+                type: String,
+                value: "",
+              },
+              "for": {
+                type: String,
+                value: "",
+              },
+              "disabled": {
+                type: Boolean,
+                value: false,
+              },
+              "chosen": {
+                type: Boolean,
+                value: false,
+                observer: "_enable",
+              },
+              "rangeleft": {
+                type: Number,
+                value: 0,
+              },
+              "rangeright": {
+                type: Number,
+                value: 100,
+              },
+              "min": {
+                type: Number,
+                value: 0,
+              },
+              "max": {
+                type: Number,
+                value: 100,
+              }
+            },
+            ready: function(){
+              this.async((function(){
+                this.$.slider.resize(); 
+              }).bind(this));
+            },
+            _prettyPrint: function(val){
+              return val.toFixed(4);
+            },
+            _changed: function(){
+              this.fire('iron-signal',{
+                name: 'changemap',
+                data: {
+                  task: 'change_filter',
+                  scheme: {
+                    activated: this.chosen,
+                    min: this.min,
+                    max: this.max,
+                    selected: this['for'],
+                  },
+                }
+              });
+            },
+            _enable: function(chosen){
+              if (chosen){
+                this.$.sliding.style.visibility = "visible";
+                this.$.slider.resize();
+              }else{
+                this.$.sliding.style.visibility = "hidden";
+                this.min = this.rangeleft;
+                this.max = this.rangeright;
+              }
+            },
+        });
+    })();        
+    </script>
+</dom-module>

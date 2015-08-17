@@ -103,8 +103,7 @@
     enter: function() {
       this.status = 'enter';
       this.$.themap.resize();
-      this.$.themap.setDefaultPosition();
-      this.$.controller.$.slider.resize();
+      this.$.themap.position('default');
       // console.log("entered!");      
     },
     _getTitle : function(data){

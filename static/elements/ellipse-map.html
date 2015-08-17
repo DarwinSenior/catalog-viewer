@@ -1,7 +1,10 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+
 <link rel="stylesheet" href="../bower_components/Leaflet.MousePosition/src/L.Control.MousePosition.css" type="text/css" />
 <link rel="stylesheet" href="../bower_components/leaflet.fullscreen/Control.FullScreen.css">
 
+<script src="../scripts/crs.js"></script>
 <script src="../scripts/Drawer.js"></script>
 <script src="../scripts/boundary.js"></script>
 <script src="../scripts/L.SVGLayer.js"></script>
@@ -18,6 +21,7 @@
   </style>
   <template>
     <div id="map" style="width: 100%; height: 100%; background-color: black;"></div>
+    <iron-signals on-iron-signal-changemap="dispatchSignal"></iron-signals> 
   </template>
 </dom-module>
 <script>
@@ -26,31 +30,26 @@
     is: 'ellipse-map',
 
     properties: {
-      url : {
+      url: {
         type : String
       },
-      maxZoom : {
+      maxZoom: {
         type : Number,
         value : 18
       },
-      data : {
+      data: {
         type : Object,
         value : {},
         notify : true,
         observer : "_reloadMap"
       },
-      requiredinfo : {
+      requiredinfo: {
         type : Object,
         value : {},
         notify : true
       },
-      colorscheme : {
-        type : Object,
-        notify : true,
-        observer : 'changeColor'
-      },
     },
-    ready : function(){
+    ready: function(){
       this.drawer = new Drawer();
       this.drawer.changeEvent((function(d, i){
         var data = [];
@@ -62,12 +61,13 @@
         d3.event.stopPropagation();
       }).bind(this));
     },
-    attached : function(){
+
+    attached: function(){
       this.map = L.map(this.$.map,{
         center: [0,0],
         zoom: 10,
         maxZoom: 18,
-        crs: L.CRS.Simple,
+        crs: L.CRS.SimpleDynamic(this.data.bound),
         fullscreenControl: true,
         fullscreenControlOptions: {
           position: 'topleft',
@@ -78,31 +78,19 @@
       L.control.mousePosition({
           position: 'bottomright',
           separator: '/',
-          lngFormatter: (function(lng){return "<RA>"+(lng+180)}),
-          latFormatter: (function(lat){return "<DEC>"+(lat)}),
+          lngFormatter: (function(lng){  return "<RA>"+(lng.toFixed(4))}),
+          latFormatter: (function(lat){return "<DEC>"+(lat.toFixed(4))}),
       }).addTo(this.map);
 
       this._addLayer();
     },
-    _addLayer : function(){
+    _addLayer: function(){
       if (this.data._id){
-
-        // var bound = this.drawer.bound();
-        var rightbottom = this._RADEC2Scale([this.data.RA.max, this.data.DEC.max]);
-
         if (!this.boundary_layer){
             this.boundary_layer = new BoundLayer(this.map);
         }
-        // console.log(this.boundary_layer.bound);
-        var lefttop = this._RADEC2Scale([this.data.RA.min, this.data.DEC.min]);
-        var rightbottom = this._RADEC2Scale([this.data.RA.max, this.data.DEC.max]);
-        
-        this.boundary_layer.bound({
-            top: lefttop.y,
-            bottom: rightbottom.y,
-            left: lefttop.x,
-            right: rightbottom.x,
-        });
+        this.boundary_layer.bound(this.data.tightbound); 
+
         var url = "/tile/"+this.data._id+"/{z}/{x}/{y}.json";
 
         this.vector_layer = new L.SVGLayer(url, {
@@ -116,12 +104,34 @@
         this.map.addLayer(this.vector_layer);
       }
     },
-    _reloadMap : function(){
+    _reloadMap: function(){
       if (this.vector_layer){
         this.map.removeLayer(this.vector_layer);
         this.vector_layer = undefined;
       }
       this._addLayer();
+      if (this.map){
+        this.map.options.crs.setBounds(this.data.bound);
+      }
+    },
+    dispatchSignal: function(e, data){
+      if (data.task == "change_color"){
+        this.changeColor(data.scheme);
+      } else if (data.task == "change_filter"){
+        this.changeFilter(this.processFilter(data.scheme));
+      }
+    },
+    processFilter: function(scheme){
+      this.filters = this.filters || {};
+      this.filters[scheme.selected] = scheme;
+      var thescheme = [];
+      for (var key in this.filters){
+        if (this.filters[key].activated){
+          thescheme.push(this.filters[key]);
+        }
+      }
+      console.log(thescheme);
+      return thescheme;
     },
     /*
      * The color scheme of type Data -> Color
@@ -130,7 +140,7 @@
      * where Color is a string which conforms to CSS spec for color 
      * Example : "white" || "#00000" || "rgb(0,0,0)"
      */
-    changeColor : function(scheme){
+    changeColor: function(scheme){
       if (scheme && scheme.selected && this.data){
         var min = scheme.rangeleft;
         var max = scheme.rangeright;
@@ -138,54 +148,57 @@
           var scale = Math.max(0, Math.min((d[scheme.selected]-min)/(max-min), 1));
           return d3.interpolateHsl(scheme.mincolor || 'white', scheme.maxcolor || 'white')(scale);
         }
-        this.drawer.changeColor(colorAlg);
+        this.async(function(){
+          this.drawer.changeColor(colorAlg);
+        }, 600);
       }
     },
     /*
+     * The filter scheme of type Data -> Boolean
+     * scheme [{selected: <string>, min: <string>, max: <string>}]->func
+     */
+    changeFilter: function(scheme){
+      if (Array.isArray(scheme)){
+        var schemeAlg = function(d){
+          for (var i=0; i < scheme.length; i++){
+            if (d[scheme[i].selected]<scheme[i].min || d[scheme[i].selected]>scheme[i].max){
+              return false;
+            }
+          }
+          return true;
+        }
+        this.async(function(){
+          this.drawer.changeFilter(schemeAlg);
+        }, 600);
+      }
+    },
+
+    /*
      * The position returns {zoom: <int>, center: <LatLng>} 
+     * if the pos is 'default', it will set to default position
      * if newValue is defined, the map will set new position 
      * and return the newest position, and newValue shall
      * be in the form {zoom: <int>, center: <LatLng>}
      */
-    position : function(newValue){
-      if (newValue){
-        this.map.setView(newValue);
+    position: function(pos){
+      var center = this.map.getCenter();
+      var zoom = this.map.getZoom();
+      if (pos == 'default'){
+        var bound = this.data.tightbound;
+        var pos = L.latLng([(bound.decmin+bound.decmax)/2, (bound.ramax+bound.ramin)/2]);
+        this.map.setView(pos, 1, {reset: true, animate: false});
+      }else if (pos){
+        if (pos.lat && pos.lng){
+          center = pos;          
+        }
+        zoom = pos.zoom || zoom;
+        center = pos.center || center;
+        this.map.setView(center, zoom);
       }
-      return this.map.getView();
+      return {zoom: zoom, center: center};
     },
-    /*
-     * Set to the center of the coverage of the map,
-     * and find the appropriate zoom level
-     */
-    setDefaultPosition : function(){
-      // console.log("position set!");      
-      var midpoint = this._RADEC2Scale([
-        (this.data.RA.max+this.data.RA.min)/2,
-        (this.data.DEC.max+this.data.DEC.min)/2]);
-      var pos = this.map.unproject([midpoint.x*256, midpoint.y*256], 0);
-
-      this.map.setView(pos, 10, {reset: true, animate: false});
-    },
-    resize : function(){
+    resize: function(){
       this.map.invalidateSize(true);
-    },
-    _parseData : function(){
-      var data = this.data;
-    },
-    /*
-     * The input shall be a pair of ra and dec,
-     * thus, output the ratio of where the point is located
-     * output shall be (x, y) pair
-     */
-    _RADEC2Scale : function(point){
-      // lng = item['RA'] - 180
-      // lat = item['DEC']
-      var lng = point[0]-180,
-          lat = point[1];
-      return {
-        x: (lng+180)/360,
-        y: (lat+90)/180,
-      };
     },
   });
 })();

@@ -1,0 +1,126 @@
+<link rel="import" href="../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../bower_components/paper-radio-button/paper-radio-button.html">
+<link rel="import" href="./paper-double-slider.html">
+<link rel="import" href="./heatmap-picker.html">
+
+<dom-module id="select-color-ui">
+    <style>
+    :host {
+        display : block;
+    }
+    </style>
+    <template>
+      <paper-radio-group selected="{{selected}}">
+        <template is="dom-repeat" items="[[data]]">
+         <paper-radio-button class="button" name="[[item.name]]" disabled="[[!item.isNumber]]">[[item.name]]</paper-radio-button> 
+        </template>
+      </paper-radio-group>    
+      <div class="flex layout horizontal" id="sliding">
+        <span>[[prettyPrint(min)]]</span>
+        <paper-double-slider
+          class="filter-slider flex"
+          id="slider"
+          style="height: 19px;"
+          min="{{rangeleft}}"
+          max="{{rangeright}}"
+          valuemin="{{min}}" 
+          valuemax="{{max}}">
+        </paper-double-slider>
+        <span>[[prettyPrint(max)]]</span>
+      </div>
+      <heatmap-picker 
+          id="colorbar"
+          leftcolor="{{mincolor}}"
+          rightcolor="{{maxcolor}}"></heatmap-picker>
+    </template>
+    <script>
+    (function(){
+        Polymer({
+            is: "select-color-ui",
+            observers: ["changeColor(min, max, mincolor, maxcolor, selected)"],
+            properties: {
+              data: {
+                type: Array,
+                value: [],
+                observer: "reload",
+              },
+              selected: {
+                type: String,
+                value: undefined,
+                observer: "changeSelected",
+              },
+              min: {
+                type: Number,
+                value: 0,
+              },
+              max: {
+                type: Number,
+                value: 100,
+              },
+              rangeleft: {
+                type: Number,
+                value: 0,
+              },
+              rangeright: {
+                type: Number,
+                value: 0,
+              },
+              mincolor: {
+                type: String,
+                value: "",
+              },
+              maxcolor: {
+                type: String,
+                value: "",
+              },
+            },
+            ready: function(){
+              this.$.sliding.style.visibility = "hidden";
+              this.$.colorbar.style.visibility = "hidden";
+            },
+            reload: function(){
+              this.$.sliding.style.visibility = "hidden";
+              this.$.colorbar.style.visibility = "hidden";
+              this.names = Object.keys(this.data);
+            },
+            prettyPrint: function(val){
+              return val.toFixed(4);
+            },
+            changeSelected: function(select){
+              var datum = undefined;
+              this.data.forEach(function(item){
+                if(item.name == select){
+                  datum = item;
+                }
+              });
+              if (datum){
+                this.$.sliding.style.visibility = "visible";
+                this.$.slider.resize();
+                this.$.colorbar.style.visibility = "visible";
+                this.rangeleft = datum.min;
+                this.rangeright = datum.max;
+                this.min = datum.min;
+                this.max = datum.max;
+                this.$.slider.resize();
+              }
+            },
+            changeColor: function(){
+              this.fire('iron-signal', {
+                'name': 'changemap',
+                'data': {
+                  task: "change_color",
+                  scheme: {
+                    selected: this.selected,
+                    rangeleft: this.min,
+                    rangeright: this.max,
+                    mincolor: this.mincolor,
+                    maxcolor: this.maxcolor,
+                  }
+                }
+              })
+            },
+            
+        });
+    })();        
+    </script>
+</dom-module>

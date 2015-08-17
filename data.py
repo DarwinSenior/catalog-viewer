@@ -8,9 +8,9 @@ db = client['database']
 meta_collection = db['meta-data']
 
 def getMaps():
-    '''
+    """
     return the list of maps metadata
-    '''
+    """
 
     def convert(x):
         x['_id'] = str(x['_id'])
@@ -20,11 +20,11 @@ def getMaps():
 
 
 def addCSVToMap(_id, csv):
-    '''
+    """
     Add CSV file to the map, if it is empty
     If error or the status is not empty, 
     return False else return True
-    '''
+    """
     finder = {'_id': ObjectId(_id)}
     try:
         if meta_collection.find_one(finder)['status']!='empty':
@@ -49,7 +49,7 @@ def addCSVToMap(_id, csv):
 
  
 def createMap(info):
-    '''
+    """
     Create this map with Name and Description
     and then return the ID of the instance
     also it will set the status of this instance 
@@ -58,11 +58,12 @@ def createMap(info):
     'empty' : this instance has not been initialised yet, file to be added, or there is an error
     'processing' : there is another process that is dealing with the data
     'ready' : the file added, thus ready for view
-    '''
+    """
     meta = dict()
-    meta['NAME'] = info['NAME'] or 'undefined'
-    meta['DESCRIPTION'] = info['DESCRIPTION'] or ""
+    meta['NAME'] = info.get('NAME') or 'undefined'
+    meta['DESCRIPTION'] = info.get('DESCRIPTION') or ""
     meta['status'] = 'empty'
+    meta['type'] = info.get('type') or 'cached'
     result = meta_collection.insert_one(meta)
     new_id = str(result.inserted_id)
     newmeta = meta_collection.find_one({'_id': ObjectId(new_id)})
@@ -72,9 +73,9 @@ def createMap(info):
    
 
 def modifyMap(_id, info):
-    '''
+    """
     The Name and the descriptions are two items are allowed to modify
-    '''
+    """
     meta = meta_collection.find_one({"_id": ObjectId(_id)})
     meta['NAME'] = info['NAME'] or meta['NAME']
     meta['DESCRIPTION'] = info['NAME'] or meta['DESCRIPTION']
@@ -84,10 +85,10 @@ def modifyMap(_id, info):
     return result
 
 def deleteMap(_id):
-    '''
+    """
     Delete Map Collection with CSV FILE and INFO
     return _id:String if successful
-    '''
+    """
     try:
         cachedCollection(_id).drop()
         noncachedCollection(_id).drop()
@@ -119,6 +120,7 @@ def readRegion(_id, tileCoord):
     cached_collection = cachedCollection(_id)
     nonecached_collection = noncachedCollection(_id)
     data = readCachedRegion(cached_collection, tileCoord)
+    data = None
     if data:
         print('cached!')
         return data
@@ -144,25 +146,25 @@ def creatMapCacheCollection(_id):
     collection.create_index('loc')
 
 def createMapCollection(_id):
-    '''
+    """
     create the map collection with the corrent id,
     if it is already existed, it will raise exception,
     indexed by 'loc'
-    '''
+    """
     collection = db.create_collection('map-%s' % _id)
     collection.create_index([('loc', pmg.GEOSPHERE)])
     return collection
 
 def insertCSV(collection, data):
-    '''
+    """
     The data object shall be in the panda dataFrame,
     the requirement field include RA, DEC, A_IMAGE, B_IMAGE, THETA
-    '''
+    """
     collection.insert([indexedItem(dict(row)) for (idx, row) in data.iterrows()])
 
 
 def getMetaData(data):
-    '''
+    """
     Input : panda DataFrame,
     Output : {
     "HEADER" : [<String>] // set of all the header name
@@ -172,7 +174,7 @@ def getMetaData(data):
         "min" : <Number> // max and min only exists if its time is Number
         }
     }
-    '''
+    """
     meta = dict()
     header = meta['HEADER'] = list(data.columns)
     for column in header:
@@ -191,17 +193,17 @@ def bound(number, domain):
     return (number - lower) % (higher - lower) + lower
 
 def ratioScale(coord):
-    '''
+    """
     scale an (lng, lat) from [(-180,-90), (180, 90)] to [(0,0), (1,1)]
-    '''
+    """
     lng, lat = coord
     return (lng + 180.)/360., (lat + 90.)/180.
 
 
 def geoScale(point):
-    '''
+    """
     scale an (x,y) from [(0,0), (1,1)] to [(-180,-90), (180, 90)]
-    '''
+    """
     x, y = point
     return x*360. - 180., y*180. - 90.
 
@@ -213,17 +215,18 @@ def areabound(tileCoord):
     return (lng1, lat1), (lng2, lat2)
 
 def sizeFilter(tileCoord):
-    '''
+    """
     a query that filter out the ellipsis to small to display
     all ellipsis less than one pixel will not be displayed
-    '''
+    """
     (x, y, z) = tileCoord
-    return {'$gt': 648000.0/(0.23*2**z*256)}
+    pixelsize = 0.1
+    return {'$gt': 648000.0*pixelsize/(0.23*2**z*256)}
 
 def areaFilter(tileCoord):
-    '''
+    """
     project (x,y,z) -> geojson square
-    '''
+    """
     (lng1, lat1), (lng2, lat2) = areabound(tileCoord)
     return {
         '$geoIntersects': 
@@ -240,11 +243,11 @@ def areaFilter(tileCoord):
         }
 
 def indexedItem(item):
-    '''
+    """
     generate spatial index as geojson spec for the item 
     for each ellipses, we consider it as a square box for max boundary lng/lat(+/-)majorsemi
     thus, add 'loc' property
-    '''
+    """
     lng = item['RA'] - 180.
     lat = item['DEC']
     a = item['A_IMAGE']*0.23/3600.0

@@ -39,6 +39,8 @@
     "paper-material": "PolymerElements/paper-material#^1.0.0",
     "paper-ripple": "PolymerElements/paper-ripple#^1.0.0",
     "paper-slider": "PolymerElements/paper-slider#^1.0.0",
-    "leaflet.fullscreen": "https://github.com/brunob/leaflet.fullscreen.git#~1.1.4"
+    "leaflet.fullscreen": "https://github.com/brunob/leaflet.fullscreen.git#~1.1.4",
+    "paper-checkbox": "PolymerElements/paper-checkbox#^1.0.0",
+    "iron-signals": "PolymerElements/iron-signals#^1.0.0"
   }
 }

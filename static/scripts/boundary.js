@@ -12,7 +12,7 @@ var BoundLayer = function(leafletmap, bound, color){
     this.map = leafletmap;
     this.g = this.svg.append('g').classed('leaflet-zoom-hide', true);
 
-    this._bound = bound || {top: 0, bottom:0, left:0, right:0,};
+    this._bound = bound || {decmin: 0, decmax:0, ramin:0, ramax:0,};
     leafletmap.on('viewreset', this.reset.bind(this));
     
     leafletmap.on('zoomend', this.reset.bind(this));
@@ -24,16 +24,21 @@ var BoundLayer = function(leafletmap, bound, color){
 
 
 BoundLayer.prototype.reset = function(){
-    console.log("reset!");
+    // console.log("reset!");
 
     var z = this.map.getZoom();    
     var size = Math.pow(2, z);
-    var origin = this.map.getPixelOrigin();
-    var top = this._bound.top*256*size-origin.y;
-    var bottom = this._bound.bottom*256*size-origin.y;
-    var left = this._bound.left*256*size-origin.x;
-    var right = this._bound.right*256*size-origin.x;
-    
+    var topleft = this.map.latLngToLayerPoint([this._bound.decmin, this._bound.ramin]);
+    var bottomright = this.map.latLngToLayerPoint([this._bound.decmax, this._bound.ramax]);
+    var top = topleft.y ;
+    var bottom = bottomright.y;
+    var left = topleft.x;
+    var right = bottomright.x;
+    // var top = this._bound.top*256*size-origin.y;
+    // var bottom = this._bound.bottom*256*size-origin.y;
+    // var left = this._bound.left*256*size-origin.x;
+    // var right = this._bound.right*256*size-origin.x;
+
     this.svg
         .attr('width', right-left) 
         .attr('height', bottom-top)
@@ -69,10 +74,10 @@ BoundLayer.prototype.color = function(color){
 BoundLayer.prototype.bound = function(bound){
 
     if (bound){
-        this._bound.top = bound.top || this._bound.top;
-        this._bound.left = bound.left || this._bound.left;
-        this._bound.right = bound.right || this._bound.right;
-        this._bound.bottom = bound.bottom || this._bound.bottom;
+        this._bound.ramax = bound.ramax || this._bound.ramax;
+        this._bound.decmin = bound.decmin || this._bound.decmin;
+        this._bound.decmax = bound.decmax || this._bound.decmax;
+        this._bound.ramin = bound.ramin || this._bound.ramin;
     }
 
     return this._bound;

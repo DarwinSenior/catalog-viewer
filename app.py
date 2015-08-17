@@ -1,7 +1,8 @@
 from flask import Flask, Response, request
 
 import json
-import data
+# import data
+import staticdata as data
 
 
 app = Flask(__name__, static_url_path="")
@@ -20,12 +21,12 @@ def jsons(_id, x, y, z):
     """
     Returns the tile, look at leaflet for details
     """
-    objs = data.readRegion(_id , (x, y, z))
+    the_data = data.readRegion(_id , (x, y, z))
     content = json.dumps({
                 "position": [x, y, z],
-                "count": len(objs),
-                "data": objs,
-                "bound" : data.areabound((x, y, z))
+                "count": len(the_data),
+                "data": the_data,
+                "bound" : data.areaboundWithId(_id, (x, y, z))
                 });
     return Response(mimetype="application/json", status=200, response=content)
 
