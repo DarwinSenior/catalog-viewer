@@ -1,6 +1,7 @@
 __pycache__/
 static/bower_components/
 *.pyc
+*.swp
 database/
 cloud.key
 cloud.key.pub
