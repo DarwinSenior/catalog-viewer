@@ -24,7 +24,7 @@
         <template is="dom-repeat" items="[[data]]">
           <tr>
             <th>{{item.name}}</th>
-            <td>{{item.value}}</td>
+            <td>{{prettyPrint(item.value)}}</td>
           </tr>
         </template>
       </tbody>
@@ -61,7 +61,10 @@
     },
     _isEmpty : function(data){
       return data.length==0;
-    }
+    },
+    prettyPrint: function(value){
+      return (+value).toFixed(4) || value;
+    },
   });
 })();
 </script>

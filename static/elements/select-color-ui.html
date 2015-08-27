@@ -79,8 +79,9 @@
               this.$.colorbar.style.visibility = "hidden";
             },
             reload: function(){
-              this.$.sliding.style.visibility = "hidden";
-              this.$.colorbar.style.visibility = "hidden";
+              // this.$.sliding.style.visibility = "hidden";
+              // this.$.colorbar.style.visibility = "hidden";
+              console.log(this.min, this.max);
               this.names = Object.keys(this.data);
             },
             prettyPrint: function(val){

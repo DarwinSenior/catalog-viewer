@@ -91,7 +91,7 @@
         }
         this.boundary_layer.bound(this.data.tightbound); 
 
-        var url = "/tile/"+this.data._id+"/{z}/{x}/{y}.json";
+        var url = "/api/tile/"+this.data._id+"/{z}/{x}/{y}.json";
 
         this.vector_layer = new L.SVGLayer(url, {
           maxZoom : this.maxZoom,
@@ -130,7 +130,6 @@
           thescheme.push(this.filters[key]);
         }
       }
-      console.log(thescheme);
       return thescheme;
     },
     /*

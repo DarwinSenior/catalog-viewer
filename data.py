@@ -47,7 +47,6 @@ def addCSVToMap(_id, csv):
         return False
 
 
- 
 def createMap(info):
     """
     Create this map with Name and Description

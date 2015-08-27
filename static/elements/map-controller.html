@@ -53,8 +53,9 @@
       </template>      
     </collapsable-item>
 
+    <iron-signals on-iron-signal-changemap="dispatchSignal"></iron-signals> 
     <collapsable-item title="Map Colour Setting">
-       <select-color-ui id="colorui" data="[[_processdata(data)]]"></select-color-ui> 
+       <select-color-ui id="colorui" data="[[_processdata(data, filters)]]"></select-color-ui> 
     </collapsable-item>
   </template>
 </dom-module>
@@ -64,40 +65,59 @@
     is: 'map-controller',
 
     properties: {
-      title : {
-        type : String,
-        value : "untitled",
-        notify : true
+      title: {
+        type: String,
+        value: "untitled",
+        notify: true
       },
       data : {
-        type : Object
+        type: Object
+      },
+      filters: {
+        type: Object,
       },
       requiredinfo: {
-        type : Object
+        type: Object
       },
     },
-    ready : function(){
+    ready: function(){
+      this.filters = {};
     },
-    _return : function(){
-      this.fire('page-map-return');
+    dispatchSignal: function(e, data){
+      if (data.task == "change_filter"){
+        this._processFilter(data.scheme);
+      }
     },
-    _processdata: function(data){
+    _return: function(){
+      page('/viewmap/');
+    },
+    _processFilter: function(scheme){
+      var filters = {};
+      for (var key in this.filters){
+        if(this.filters[key].activated){
+          filters[key] = this.filters[key];
+        }
+      }
+      filters[scheme.selected] = scheme;
+      this.filters = filters;
+    },
+    _processdata: function(data, filters){
       var processed_data = [];
+      filters = filters || {};
       for (key in data){
         if (data[key].type){
+          var min = filters[key] ? +filters[key].min : data[key].min;
+          var max = filters[key] ? +filters[key].max : data[key].max;
           processed_data.push({
             name: key,
-            min: data[key].min,
-            max: data[key].max,
+            min: min,
+            max: max,
             isNumber: data[key].type=='FLOAT' || data[key].type=='INT',
           })
         }
       }
       return processed_data;
     },
-    _prettyPrint: function(val){
-      return (+val).toPrecision(4);
-    }
   });
 })();
 </script>

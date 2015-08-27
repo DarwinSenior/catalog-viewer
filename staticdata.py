@@ -41,6 +41,11 @@ def getMaps():
     """
     return [idConvert(item) for item in meta_collection.find()]
 
+def getMetaMap(_id):
+    """
+    return the metadata of specific id
+    """
+    return idConvert(meta_collection.find_one({"_id": ObjectId(_id)}))
 
 def areaboundWithId(_id, tile_coord):
     """

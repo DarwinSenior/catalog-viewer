@@ -1,22 +1,14 @@
-from flask import Flask, Response, request
+from flask import Flask, Response, request, redirect
 
 import json
 # import data
 import staticdata as data
 
 
-app = Flask(__name__, static_url_path="")
+app = Flask(__name__, static_url_path="/static")
 
 
-@app.route("/")
-def hello():
-    '''
-    Serving the starting page
-    '''
-    return app.send_static_file('./index.html')
-
-
-@app.route('/tile/<_id>/<int:z>/<int:x>/<int:y>.json', methods=["GET"])
+@app.route('/api/tile/<_id>/<int:z>/<int:x>/<int:y>.json', methods=["GET"])
 def jsons(_id, x, y, z):
     """
     Returns the tile, look at leaflet for details
@@ -30,12 +22,22 @@ def jsons(_id, x, y, z):
                 });
     return Response(mimetype="application/json", status=200, response=content)
 
-@app.route('/maps', methods=["GET"])
+@app.route('/api/maps', methods=["GET"])
 def get_maps():
     content = json.dumps(data.getMaps())
     return Response(mimetype="application/json", status=200, response=content)
 
-@app.route('/maps', methods=["POST"])
+@app.route('/api/map/<_id>', methods=["GET"])
+def get_map(_id):
+    """
+    Return the metadata of a specific map
+    """
+    content = json.dumps(data.getMetaMap(_id))
+    return Response(mimetype="application/json", status=200, response=content)
+
+
+
+@app.route('/api/maps', methods=["POST"])
 def change_map():
     '''
     this is the post api for modifying map
@@ -51,7 +53,7 @@ def change_map():
 
 
 
-@app.route('/maps/upload', methods=["POST"])
+@app.route('/api/maps/upload', methods=["POST"])
 def attach_file():
     '''
     Attach the file of an given _id,
@@ -66,7 +68,7 @@ def attach_file():
 
 
 
-@app.route('/maps', methods=["PUT"])
+@app.route('/api/maps', methods=["PUT"])
 def put_map():
     """
     put a new map with name and description, the response would be the created new map metadata 
@@ -80,7 +82,7 @@ def put_map():
     content = json.dumps(newmeta)
     return Response(mimetype="application/json", status=200, response=content)
 
-@app.route('/maps', methods=["DELETE"])
+@app.route('/api/maps', methods=["DELETE"])
 def delete_map():
     """
     Delete a map with its id and return the new updated metadata
@@ -90,6 +92,20 @@ def delete_map():
     content = json.dumps(data.getMaps())
     return Response(mimetype="application/json", status=200, response=content)
 
+
+@app.route("/")
+def hello():
+    """
+    start the first page
+    """
+    return redirect('/viewmap/main')
+
+@app.route("/viewmap/<path:path>")
+def pages(path):
+    '''
+    Serving the starting page
+    '''
+    return app.send_static_file('./index.html')
 
 if __name__ == "__main__":
     # app.run(debug=True, host='0.0.0.0', port=80)

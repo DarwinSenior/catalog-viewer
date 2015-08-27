@@ -25,12 +25,12 @@
     is: 'page-routing',
     listeners : {
       'changePage': '_handlePageChange',
-      'update': '_handleUpdate'
+      'update': '_handleUpdate',
     },
     properties: {
       "url" : {
         type : String,
-        value : "main-page"
+        // value : "main-page"
       },
       "items" : {
         type : Array,
@@ -41,48 +41,44 @@
         value : {}
       }
     },
-    _handlePageChange : function(event, data){
-      /*
-        Fire when the url changes
-      */
-      if (data.url == 'main-page' && this.url != "main-page"){
-        this.url = data.url;
-      }
-      if (data.url == "map-page" && this.url != "map-page"){
-        this.url = data.url;
-        this.item = findBykey(this.items, '_id', data.id) || {};
-      }
+    tomain : function(ctx, next){
+      qwest.get('/api/maps', null).then((function(data){
+        this.items = data;
+        this.url = "main-page"; 
+      }).bind(this));
+    },
+    tomap: function(ctx, next){
+      qwest.get('/api/map/'+ctx.params.mapid).then((function(data){
+        this.url = "map-page";
+        this.item = data;
+        this.$.map.enter();
+        this.$.main.link(ctx.params.mapid);
+      }).bind(this));
     },
     attached : function(event){
+      page('/viewmap/', this.tomain.bind(this));
+      page('/viewmap/:mapid', this.tomap.bind(this));
+      page();
       this._getmaps();
     },
     _getmaps : function(){
-      qwest.get('/maps', null).then((function(data){
+      qwest.get('/api/maps').then((function(data){
         this.items = data;
       }).bind(this));
     },
+    /*
+     * if the items are not defined
+     * this send a get request for the newest update,
+     * else, just update the data
+     */
     _handleUpdate : function(event, items){
-      /*
-       * if the items are not defined
-       * this send a get request for the newest update,
-       * else, just update the data
-       */
-      console.log(items); 
       if (!items){
-        console.log("Empty");
         this._getmaps();
       }else if (Array.isArray(items)){
-        console.log("Array");
         this.items = items;
       }else if (items['$push']){
-        // this.items.push(items['$push']);
         this.items = this.items.concat(items['$push']);
       }
-      // if (Array.isArray(items)){
-      //   this.items = items;
-      // }else{
-      //   this._getmaps();
-      // }
     },
   });
 })();

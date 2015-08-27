@@ -130,7 +130,8 @@
       this.animationConfig.exit = {name: 'cascaded-animation', animation: 'fade-out-animation', nodes: nodes};
     },
     _onOpen: function(){
-      this.fire("openCard", {target: this, pageurl: this['for']});
+      page("/viewmap/"+this['for']);
+      this.fire("openCard", {target: this});
     },
     _mouseout: function(){
       this._elevation = 0;
@@ -149,7 +150,7 @@
       // this.playAnimation('entry');
     },
     _delete: function(evt){
-      qwest.delete('/maps', {id : this['for']})
+      qwest.delete('/api/maps', {id : this['for']})
           .then((function(data){
             this.fire('update', data);
           }).bind(this));

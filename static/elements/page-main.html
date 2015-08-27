@@ -11,6 +11,13 @@
             height : 100vh;
             width: 100vw;
         }
+        #dummy {
+            display: block;
+            visibility: hidden;
+            height: 300px;
+            width: 300px;
+            margin: 20px;
+        }
     </style>
     <template>
         <paper-toolbar id="header">
@@ -26,6 +33,7 @@
               status="[[item.status]]">
             </item-card>
         </template>
+        <div id="dummy"></div>
     </template>
 </dom-module>
 <script>
@@ -71,6 +79,7 @@
                 {name: "slide-up-animation", node: this.$.header},
                 {name: 'fade-out-animation', node: this.$.buttons}
             ];
+            this.sharedElements['page-transition'] = this.$.dummy;
         },
         _changePage : function(target){
             var cards = this.querySelectorAll('item-card');
@@ -86,7 +95,6 @@
         },
         _handleOpenCard : function(event, data){
             this._changePage(data.target);
-            this.fire('changePage', {url : 'map-page', id : data.pageurl});
         },
         enter : function(){
             this.status = 'enter';
