@@ -42,7 +42,7 @@
       }
     },
     tomain : function(ctx, next){
-      qwest.get('/api/maps', null).then((function(data){
+      qwest.get('/api/maps/').then((function(data){
         this.items = data;
         this.url = "main-page"; 
       }).bind(this));
@@ -62,7 +62,7 @@
       this._getmaps();
     },
     _getmaps : function(){
-      qwest.get('/api/maps').then((function(data){
+      qwest.get('/api/maps/').then((function(data){
         this.items = data;
       }).bind(this));
     },
