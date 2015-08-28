@@ -98,7 +98,7 @@ def hello():
     """
     start the first page
     """
-    return redirect('/viewmap/main')
+    return redirect('/viewmap/')
 
 @app.route("/viewmap/<path:path>")
 def pages(path):
