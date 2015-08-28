@@ -100,6 +100,13 @@ def hello():
     """
     return redirect('/viewmap/')
 
+@app.route("/viewmap/")
+def mainpage():
+    """
+    Serving the starting page
+    """
+    return app.send_static_file('./index.html')
+
 @app.route("/viewmap/<path:path>")
 def pages(path):
     '''
