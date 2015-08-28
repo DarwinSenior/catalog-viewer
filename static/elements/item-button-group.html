@@ -79,7 +79,7 @@
           var formdata = new FormData();
           formdata.append('csv', this.$.input_file.file);
 
-          qwest.put('/maps', {          
+          qwest.put('/api/maps', {          
             'name': this.$.input_name.value,
             'description': this.$.input_description.value,
           }).then((function(data){
@@ -88,7 +88,7 @@
             this.fire('update', {'$push': data});
 
             formdata.append('id', data._id);
-            qwest.post('/maps/upload', formdata).then((function(data){
+            qwest.post('/api/maps/upload', formdata).then((function(data){
               this.fire('update', data);
               console.log('load complete');
             }).bind(this));
