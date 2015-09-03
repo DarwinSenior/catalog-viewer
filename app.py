@@ -1,5 +1,4 @@
 from flask import Flask, Response, request, redirect
-
 import json
 # import data
 import staticdata as data

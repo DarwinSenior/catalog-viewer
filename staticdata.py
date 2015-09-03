@@ -27,7 +27,7 @@ meta_collection = db['meta-data']
 
 # The reason to use bound is to create a more flexible ratio
 # we currently make assumption that the map is of small region
-# which suffice to use linear tranformation
+# which suffice to use linear transformation
 
 meta_collection = db['meta-data']
 
@@ -113,7 +113,7 @@ def addCSVToMap(_id, csv):
         meta['status'] = 'ready'
         meta['bound'] = autobound(meta)
         meta_collection.find_one_and_update(finder, {'$set': meta})
-        # meta_collection.find_one_and_update(finder, {'$set': {'bound': bound}})
+        
         return True
     except:
         logging.exception('exception happend')
