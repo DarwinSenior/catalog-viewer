@@ -150,7 +150,7 @@
       // this.playAnimation('entry');
     },
     _delete: function(evt){
-      qwest.delete('/api/maps', {id : this['for']})
+      qwest.delete('/api/map', {id : this['for']})
           .then((function(data){
             this.fire('update', data);
           }).bind(this));

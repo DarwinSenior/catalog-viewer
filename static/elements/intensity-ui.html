@@ -1,0 +1,29 @@
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+
+<dom-module id="intensity-ui">
+    <template>
+        <paper-slider min="1" max="20" value={{value}} editable></paper-slider>
+    </template>
+    <script>
+        Polymer({
+            is: 'intensity-ui',
+            properties: {
+                value : {
+                    type: Number,
+                    value: 4,
+                    observer: 'intensity_change',
+                },  
+            },
+            intensity_change: function(new_intensity){
+                this.fire('iron-signal', {
+                    name: 'changemap',
+                    data: {
+                        task: 'change_intensity',
+                        scheme: new_intensity,
+                    },
+                });                
+            },
+        });
+    </script>
+</dom-module>
+

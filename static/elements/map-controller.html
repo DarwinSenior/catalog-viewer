@@ -8,6 +8,7 @@
 <link rel="import" href="./simple-data.html">
 <link rel="import" href="./select-color-ui.html">
 <link rel="import" href="./filter-ui.html">
+<link rel="import" href="./intensity-ui.html">
 <dom-module id="map-controller">
   <style>
     :host {
@@ -32,7 +33,9 @@
   </style>
   <template>
     <paper-toolbar class="medium-tall">
-      <paper-icon-button icon="arrow-back" on-tap="_return"></paper-icon-button>
+        <template is="dom-if" if="{{_canReturn()}}">
+          <paper-icon-button icon="arrow-back" on-tap="_return"></paper-icon-button>
+      </template>
       <div class="title bottom"><span class="header-title">[[title]]</span></div>
     </paper-toolbar>
     <collapsable-item title="Data Display">
@@ -52,7 +55,10 @@
         </filter-ui>
       </template>      
     </collapsable-item>
-
+    
+    <collapsable-item title="Map Intensity Setting">
+        <intensity-ui></intensity-ui>
+    </collapsable-item>
     <iron-signals on-iron-signal-changemap="dispatchSignal"></iron-signals> 
     <collapsable-item title="Map Colour Setting">
        <select-color-ui id="colorui" data="[[_processdata(data, filters)]]"></select-color-ui> 
@@ -90,6 +96,9 @@
     },
     _return: function(){
       page('/viewmap/');
+    },
+    _canReturn: function(){
+        return (this.data || {}).type=="modifiable"
     },
     _processFilter: function(scheme){
       var filters = {};

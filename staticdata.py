@@ -25,6 +25,16 @@ meta_collection = db['meta-data']
 #  proto: meta-map //and all the attribute of basic meta 
 # }
 
+# meta-map has the following entries
+# {
+#   status: <ready>, <processing>, <ready>,
+#   NAME: <String>,
+#   DESCRIPTION: <String>,
+#   HEADER: [<String>],
+#   [<Attribute>]: {min: <Number>, max: <Number>, type: <String>},
+#   type: <modifiable> || <static>,
+# }
+
 # The reason to use bound is to create a more flexible ratio
 # we currently make assumption that the map is of small region
 # which suffice to use linear transformation
@@ -39,7 +49,7 @@ def getMaps():
     """
     return the list of maps metadata
     """
-    return [idConvert(item) for item in meta_collection.find()]
+    return [idConvert(item) for item in meta_collection.find({'type': 'modifiable'})]
 
 def getMetaMap(_id):
     """
@@ -90,7 +100,7 @@ def createMap(info):
     meta['NAME'] = info.get('NAME') or 'undefined'
     meta['DESCRIPTION'] = info.get('DESCRIPTION') or ""
     meta['status'] = 'empty'
-    meta['type'] = info.get('type') or 'static'
+    meta['type'] = info.get('type') or 'modifiable'
     meta['bound'] = info.get('bound') or 'auto'
     result = meta_collection.insert_one(meta)
     new_id = str(result.inserted_id)

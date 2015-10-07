@@ -119,6 +119,8 @@
         this.changeColor(data.scheme);
       } else if (data.task == "change_filter"){
         this.changeFilter(this.processFilter(data.scheme));
+      } else if (data.task == "change_intensity"){
+        this.changeIntensity(data.scheme);
       }
     },
     processFilter: function(scheme){
@@ -171,7 +173,16 @@
         }, 600);
       }
     },
-
+    
+    /**
+      *  the intensity scheme of type Int
+      *  This is different in the sense that it is a relatively simple scheme comparing to the two above.
+      */
+    changeIntensity: function(scheme){
+        this.async(function(){
+            this.drawer.changeIntensity(scheme);   
+        }, 600);
+    },
     /*
      * The position returns {zoom: <int>, center: <LatLng>} 
      * if the pos is 'default', it will set to default position
