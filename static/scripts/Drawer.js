@@ -6,6 +6,7 @@ var Drawer = function(colorAlg, eventAlg, filterAlg, tileSize){
     tileSize = tileSize || [256, 256]; // width, height
     this._tileWidth = tileSize[0];
     this._tileHeight = tileSize[1];
+    this._intensity = 4;
 }
 
 Drawer.prototype.drawer = function(data, tile){
@@ -47,7 +48,7 @@ Drawer.prototype.drawCanvas = function(canvas, data){
      * This function is for drawing the squres that has size less than one pixel
      * thus lose the ability to interact with
      */
-    var intensity = 4;
+    intensity = this._intensity;
     canvas.fillStyle = '#000000';
     canvas.clearRect(0, 0, this._tileWidth, this._tileHeight);
     data.forEach((function(d){
@@ -116,6 +117,16 @@ Drawer.prototype.changeFilter = function(filterAlg){
             .selectAll('ellipse')
             .attr('display', (function(d){return (this._filterAlg(d))?"block":"none"}).bind(this));
 
+        var canvas = d3.select(tile).select('canvas');
+
+        this.drawCanvas(canvas.node().getContext('2d'), canvas.data()[0]);
+    }
+}
+
+Drawer.prototype.changeIntensity = function(new_intensity){
+    this._intensity = new_intensity;
+    for (var i=0; i<this._tiles.length; i++){
+        var tile = this._tiles[i];
         var canvas = d3.select(tile).select('canvas');
 
         this.drawCanvas(canvas.node().getContext('2d'), canvas.data()[0]);
