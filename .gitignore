@@ -1,6 +1,8 @@
 __pycache__/
+tiles/
 static/bower_components/
 *.pyc
+*.DS_store
 *.swp
 database/
 cloud.key

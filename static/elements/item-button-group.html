@@ -87,8 +87,8 @@
             data.status = 'processing';
             this.fire('update', {'$push': data});
 
-            formdata.append('id', data._id);
-            qwest.post('/api/map/upload', formdata).then((function(data){
+            // formdata.append('id', data._id);
+            qwest.post('/api/map/upload?id='+data._id, formdata).then((function(data){
               this.fire('update', data);
               console.log('load complete');
             }).bind(this));

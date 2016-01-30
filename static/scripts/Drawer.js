@@ -1,4 +1,5 @@
-var Drawer = function(colorAlg, eventAlg, filterAlg, tileSize){
+"use strict"
+let Drawer = function(colorAlg, eventAlg, filterAlg, tileSize){
     this._colorAlg = colorAlg || function(){return 'white'};
     this._eventAlg = eventAlg || function(){}; 
     this._filterAlg = filterAlg || function(){return true};
@@ -7,137 +8,143 @@ var Drawer = function(colorAlg, eventAlg, filterAlg, tileSize){
     this._tileWidth = tileSize[0];
     this._tileHeight = tileSize[1];
     this._intensity = 4;
+    this._scale = 1;
 }
 
 Drawer.prototype.drawer = function(data, tile){
     this._tiles.push(tile);
-    var svg = d3.select(tile).append('svg:svg')
+    let tile_select = d3.select(tile)
+    let svg = tile_select.append('svg:svg')
                 .attr('viewBox', '0 0 '+this._tileWidth+' '+this._tileHeight)
                 .attr('height', '100%')
                 .attr('width', '100%');
 
-    var canvas = d3.select(tile).append('canvas')
+    let canvas = tile_select.append('canvas')
                 .attr('height', this._tileHeight)
                 .attr('width', this._tileHeight)
                 .style({height: "100%",
                         width: "100%"});
 
-    ctx = canvas.node().getContext('2d');
-    // var background = svg.append('rect')
-    //                     .attr('height', this._tileHeight)
-    //                     .attr('width', this._tileWidth)
-    //                     .attr('x', 0)
-    //                     .attr('y', 0)
-    //                     .attr('fill', 'black');
+    let ctx = canvas.node().getContext('2d');
 
-    var items = data.data.map((function(item){
-        return this._getEllipseData(item, data.bound);
-    }).bind(this));
-    var radius_limit = 0.5;    
-    var svgitems = items.filter(function(d){ return (d.ry>=radius_limit) || (d.rx>=radius_limit)});
-    var canvasitems = items.filter(function(d){ return (d.ry<radius_limit) && (d.rx<radius_limit)});
-    // canvas.__data__ = canvasitems;
-    canvas.data([canvasitems]);
-    var ellipses = this.drawSvg(svg, svgitems);
+    
+    let items = data.data.map(item => this._getEllipseData(item, data.bound));
+    let radius_limit = 0.5*this._scale;    
+
+    let svgitems = items.filter(d => d.ry>=radius_limit || d.rx>=radius_limit);
+    let canvasitems = items.filter(d => d.ry<radius_limit && d.rx<radius_limit);
+    canvas.datum(canvasitems);
+
+    let ellipses = this.drawSvg(svg, svgitems);
+
     this.drawCanvas(ctx, canvasitems);
-    // this.drawBoundary(svg, data.position);
+
     ellipses.on('click', this._eventAlg);
 };
+
+
 Drawer.prototype.drawCanvas = function(canvas, data){
     /*
      * This function is for drawing the squres that has size less than one pixel
      * thus lose the ability to interact with
      */
-    intensity = this._intensity;
+    let intensity = this._intensity;
     canvas.fillStyle = '#000000';
     canvas.clearRect(0, 0, this._tileWidth, this._tileHeight);
-    data.forEach((function(d){
+    data.forEach( d => {
         canvas.fillStyle = this._colorAlg(d);
-        var area = (d.rx*d.ry*Math.PI);
-        var side = Math.sqrt(area);
+        let area = (d.rx*d.ry*Math.PI*this._scale*this._scale);
+        let side = Math.sqrt(area);
         if (this._filterAlg(d)){
-            for (var i=0; i<intensity; i++){
+            for (let i=0; i<intensity; i++){
                 canvas.fillRect(d.cx, d.cy, side, side);
             }
         }
-    }).bind(this));
+    });
 }
 
 
 Drawer.prototype.drawSvg = function(svg, items){
-    
-    var ellipses = svg.selectAll('ellipse')
+
+    let ellipses = svg.selectAll('ellipse')
     .data(items)
     .enter()
     .append('ellipse')
-    .attr('cx', function(d){return d.cx})
-    .attr('cy', function(d){return d.cy})
-    .attr('rx', function(d){return d.rx})
-    .attr('ry', function(d){return d.ry})
-    .attr('transform', function(d){return d.transform})
+    .attr('cx', d => d.cx)
+    .attr('cy', d => d.cy)
+    .attr('rx', d => d.rx*this._scale)
+    .attr('ry', d => d.ry*this._scale)
+    .attr('transform', d => d.transform)
     .attr('fill', this._colorAlg)
-    .attr('display', (function(d){return (this._filterAlg(d))?"block":"none"}).bind(this));
+    .attr('display', d => this._filterAlg(d)?"block":"none")
     return ellipses;
 }
 
 Drawer.prototype.cleaner = function(tile){
-    this._tiles = this._tiles.filter(function(item){return item!=tile}); // cut off the tile
+    this._tiles = this._tiles.filter(item => item!=tile);
     d3.select(tile).selectAll('ellipse').on('click', null);
 };
 
 Drawer.prototype.changeEvent = function(eventAlg){
     this._eventAlg = eventAlg || this._eventAlg;
-    for (var i=0; i<this._tiles.length; i++){
-        var tile = this._tiles[i];
+    for (let tile of this._tiles){
         d3.select(tile)
             .selectAll('ellipse')
             .on('click', this._eventAlg);
     }
 };
 
+Drawer.prototype.changeScale = function(scale){
+    this._scale = scale;
+    for (let tile of this._tiles){
+        let tile_select = d3.select(tile);
+        let data = tile_select.data()[0];
+        tile_select.html('');
+        this.drawer(data, tile);
+    }
+}
 Drawer.prototype.changeColor = function(colorAlg){
     this._colorAlg = colorAlg || this._colorAlg;
-    for (var i=0; i<this._tiles.length; i++){
-        var tile = this._tiles[i];
+    for (let tile of this._tiles){
         d3.select(tile)
             .selectAll('ellipse')
             .transition()
             .attr('fill', this._colorAlg);
         var canvas = d3.select(tile).select('canvas');
-        this.drawCanvas(canvas.node().getContext('2d'), canvas.data()[0]);
+        this.drawCanvas(canvas.node().getContext('2d'), canvas.datum());
     }
 
 };
 
 Drawer.prototype.changeFilter = function(filterAlg){
     this._filterAlg = filterAlg || this._filterAlg;
-    for (var i=0; i<this._tiles.length; i++){
-        var tile = this._tiles[i];
+
+    for (let tile of this._tiles){
         d3.select(tile)
             .selectAll('ellipse')
-            .attr('display', (function(d){return (this._filterAlg(d))?"block":"none"}).bind(this));
+            .attr('display', d => this._filterAlg(d)?"block":"none");
 
         var canvas = d3.select(tile).select('canvas');
-
-        this.drawCanvas(canvas.node().getContext('2d'), canvas.data()[0]);
+        this.drawCanvas(canvas.node().getContext('2d'), canvas.datum());
     }
 }
 
 Drawer.prototype.changeIntensity = function(new_intensity){
     this._intensity = new_intensity;
-    for (var i=0; i<this._tiles.length; i++){
-        var tile = this._tiles[i];
+    // for (var i=0; i<this._tiles.length; i++){
+    //     var tile = this._tiles[i];
+    for (let tile of this._tiles){
         var canvas = d3.select(tile).select('canvas');
 
-        this.drawCanvas(canvas.node().getContext('2d'), canvas.data()[0]);
+        this.drawCanvas(canvas.node().getContext('2d'), canvas.datum());
     }
 }
 
 Drawer.prototype._getEllipseData = function(item, bound){
-    var rangex = bound.ramax-bound.ramin;
-    var rangey = bound.decmax-bound.decmin;
-    var offsetx = bound.ramin;
-    var offsety = bound.decmin;
+    let rangex = bound.ramax-bound.ramin;
+    let rangey = bound.decmax-bound.decmin;
+    let offsetx = bound.ramin;
+    let offsety = bound.decmin;
 
 
     item.cx = (item.RA-offsetx)/rangex*256;

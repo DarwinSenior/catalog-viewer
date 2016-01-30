@@ -30,9 +30,6 @@
     is: 'ellipse-map',
 
     properties: {
-      url: {
-        type : String
-      },
       maxZoom: {
         type : Number,
         value : 18
@@ -121,6 +118,8 @@
         this.changeFilter(this.processFilter(data.scheme));
       } else if (data.task == "change_intensity"){
         this.changeIntensity(data.scheme);
+      } else if (data.task == "change_scale"){
+        this.changeScale(data.scheme);
       }
     },
     processFilter: function(scheme){
@@ -182,6 +181,15 @@
         this.async(function(){
             this.drawer.changeIntensity(scheme);   
         }, 600);
+    },
+    /**
+      * the scale scheme of type int
+      * This will scale everything up 
+      */
+    changeScale: function(scheme){
+        this.async(function(){
+            this.drawer.changeScale(scheme);
+        }, 1000);
     },
     /*
      * The position returns {zoom: <int>, center: <LatLng>} 

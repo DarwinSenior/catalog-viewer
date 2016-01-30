@@ -5,7 +5,6 @@ import staticdata as data
 import json
 
 class tileHandler(tornado.web.RequestHandler):
-    
     def get(self, _id, z, x, y):
         x, y, z = int(x), int(y), int(z)
         the_data = data.readRegion(_id , (x, y, z))
@@ -18,6 +17,19 @@ class tileHandler(tornado.web.RequestHandler):
         self.set_status(200)
         self.set_header('Content-Type', 'application/json')
         self.write(content)
+
+class uploadHandler(tornado.web.RequestHandler):
+
+    def post(self):
+        csv = self.request.files.get('csv')
+        if csv:
+            csv = io.BytesIO(csv[0]['body'])
+        _id = self.get_argument('id') 
+        # ipdb.set_trace()
+        result = data.addCSVToMap(_id, csv)
+        content = json.dumps(data.getMaps())
+        return Response(mimetype='application/json', status=200, response=content)
+
 
 class mapHandler(tornado.web.RequestHandler):
 
@@ -78,10 +90,11 @@ class mapsHandler(tornado.web.RequestHandler):
 application = tornado.web.Application([
         (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': './static'}),
         (r'/api/tile/([0-9a-z]+)/(-?[0-9]+)/(-?[0-9]+)/(-?[0-9]+).json', tileHandler),
+        (r'/api/maps/upload', uploadHandler),
         (r'/api/map/([0-9a-z]+)', mapHandler),
+        (r'/api/maps', mapsHandler),
         (r'/viewmap/(.*)', mainHandler),
         (r'/', redirectHandler),
-        (r'/api/maps', mapsHandler),
         ], debug=True)
 
 if __name__ == '__main__':

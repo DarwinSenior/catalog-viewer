@@ -9,6 +9,7 @@
 <link rel="import" href="./select-color-ui.html">
 <link rel="import" href="./filter-ui.html">
 <link rel="import" href="./intensity-ui.html">
+<link rel="import" href="./scalw-ui.html">
 <dom-module id="map-controller">
   <style>
     :host {
@@ -58,6 +59,9 @@
     
     <collapsable-item title="Map Intensity Setting">
         <intensity-ui></intensity-ui>
+    </collapsable-item>
+    <collapsable-item title="Map Scale Setting">
+        <scale-ui></scale-ui>
     </collapsable-item>
     <iron-signals on-iron-signal-changemap="dispatchSignal"></iron-signals> 
     <collapsable-item title="Map Colour Setting">

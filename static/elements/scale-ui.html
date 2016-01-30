@@ -1,0 +1,29 @@
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+
+<dom-module id="scale-ui">
+    <template>
+        <paper-slider min="1" max="4" value={{value}} editable></paper-slider>
+    </template>
+    <script>
+        Polymer({
+            is: 'scale-ui',
+            properties: {
+                value : {
+                    type: Number,
+                    value: 4,
+                    observer: 'scale_change',
+                },  
+            },
+            scale_change: function(new_scale){
+                this.fire('iron-signal', {
+                    name: 'changemap',
+                    data: {
+                        task: 'change_scale',
+                        scheme: new_scale,
+                    },
+                });                
+            },
+        });
+    </script>
+</dom-module>
+
